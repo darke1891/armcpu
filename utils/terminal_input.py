@@ -6,7 +6,7 @@
 
 DEVICE = '/dev/ttyUSB0'
 
-import serial
+import serial_fix as serial
 import sys
 import time
 import os

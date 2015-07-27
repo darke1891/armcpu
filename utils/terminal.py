@@ -15,7 +15,7 @@ DEVICE = '/dev/ttyUSB0'
 from terminal_input import getch
 
 import sys
-import serial
+import serial_fix as serial
 import threading
 import time
 import send_file
@@ -25,8 +25,10 @@ import os.path
 if os.getenv('DEVICE'):
     DEVICE = os.getenv('DEVICE')
 
-ser = serial.Serial(DEVICE, 115201,
+ser = serial.Serial(DEVICE, 115200,
         stopbits=2, parity=serial.PARITY_NONE)
+ser.setStopbits(1)
+ser.setStopbits(2) # wired problem, net reset serial port
 
 def do_print(s):
     print s.replace('\n', '\r\n') + '\r'

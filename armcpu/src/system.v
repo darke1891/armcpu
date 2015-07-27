@@ -46,7 +46,14 @@ module system
 	// ascii keyboard interface
 	input kbd_int,
 	output kbd_int_ack,
-	input [7:0] kbd_data);
+	input [7:0] kbd_data,
+	
+	// dm9000Aep eth
+	inout [15:0] eth_data,
+	output eth_cs,
+	output eth_cmd,
+	input eth_int
+);
 
 	// ------------------------------------------------------------------
 
@@ -101,7 +108,13 @@ module system
 		.vga_write_enable(vga_write_enable),
 	
 		.kbd_data(kbd_data),
-		.kbd_int_ack(kbd_int_ack));
+		.kbd_int_ack(kbd_int_ack),
+		
+		.eth_data(eth_data),
+		.eth_cs(eth_cs),
+		.eth_cmd(eth_cmd),
+		.eth_int(eth_int)
+		);
 
 
 	serial_port #(.CLK_FREQ(50000000)) ucom(

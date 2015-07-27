@@ -1,0 +1,24 @@
+NET "eth_data[0]" LOC = C10;
+NET "eth_data[1]" LOC = D10;
+NET "eth_data[2]" LOC = E9;
+NET "eth_data[3]" LOC = E10;
+NET "eth_data[4]" LOC = A9;
+NET "eth_data[5]" LOC = C9;
+NET "eth_data[6]" LOC = A8;
+NET "eth_data[7]" LOC = B8;
+NET "eth_data[8]" LOC = A12;
+NET "eth_data[9]" LOC = D12;
+NET "eth_data[10]" LOC = C12;
+NET "eth_data[11]" LOC = A11;
+NET "eth_data[12]" LOC = C11;
+NET "eth_data[13]" LOC = D11;
+NET "eth_data[14]" LOC = A10;
+NET "eth_data[15]" LOC = B10;
+
+NET "eth_cmd" LOC = B12;
+NET "eth_cs" LOC = B14;
+NET "eth_int" LOC = D13;
+NET "eth_ior" LOC = C13;
+NET "eth_iow" LOC = A13;
+NET "eth_reset" LOC = A14;
+# 25M D14

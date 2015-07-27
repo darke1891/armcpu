@@ -2,6 +2,7 @@
  * $File: armcpu.v
  * $Date: Fri Dec 20 15:23:08 2013 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
+ *				liangdun <randonlang@gmail.com>
  */
 
 module armcpu(
@@ -40,9 +41,17 @@ module armcpu(
 	output vga_hsync,
 	output vga_vsync,
 
+	// Keyboard
 	input kbd_enb_hi,
 	input kbd_enb_lo,
-	input [3:0] kbd_data);
+	input [3:0] kbd_data,
+	
+	// dm9000Aep eth
+	inout [15:0] eth_data,
+	output eth_cs,
+	output eth_cmd,
+	input eth_int
+);
 
 	// ------------------------------------------------------------------
 
@@ -116,7 +125,13 @@ module armcpu(
 	
 		.kbd_int(kbd_int_req),
 		.kbd_int_ack(kbd_int_ack),
-		.kbd_data(kbd_ascii));
+		.kbd_data(kbd_ascii),
+		
+		.eth_data(eth_data),
+		.eth_cs(eth_cs),
+		.eth_cmd(eth_cmd),
+		.eth_int(eth_int)
+		);
 
 	always @(posedge clk_cpu)
 		led[7:0] <= {cpu_speed[3:0], led[2:0], !led[2:0]};

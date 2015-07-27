@@ -199,6 +199,7 @@ boot/loader.bin: boot/bootasm.S
 	$(OBJCOPY) -O binary  -S boot/loader $@
 
 gen_tag:
-	ctags -R .
+	#ctags -R .
+	echo haha
 
 .PHONY: gen_tag

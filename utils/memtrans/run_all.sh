@@ -3,6 +3,10 @@
 # $Date: Sat Nov 02 12:32:26 2013 +0800
 # $Author: jiakai <jia.kai66@gmail.com>
 
+export DEVICE=/dev/ttyUSB0
+sudo chmod 666 $DEVICE
+
+#DATA_SIZE=895856
 DATA_SIZE=88800
 WORKDIR=/tmp/thuco-ram-flash-test
 rm -rf $WORKDIR
@@ -33,10 +37,10 @@ echo 'erase flash'
 ./controller.py flash erase 0 $((DATA_SIZE * 2))
 
 echo 'write flash'
-./controller.py flash write 2 $WORKDIR/fin
+./controller.py flash write 0 $WORKDIR/fin
 
 echo 'read flash'
-./controller.py flash read 2 $((DATA_SIZE * 2)) $WORKDIR/fout
+./controller.py flash read 0 $((DATA_SIZE * 2)) $WORKDIR/fout
 diff $WORKDIR/{fin,fout}
 
 echo 'all tests done'

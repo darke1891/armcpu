@@ -6,15 +6,39 @@
 
 from ctllib import MemtransController
 
+def cvt_str(s):
+    ss = ""
+    for c in s:
+        ss += str(ord(c)) + ' '
+    return ss
+
+class MT:
+    def __init__(self, s):
+        self.s = s
+
+    def read(self, n):
+        print "begin read", n
+        res = self.s.read(n)
+        print "read done ", cvt_str(res)
+        return res
+
+    def write(self, data):
+        print "begin write ", cvt_str(data)
+        self.s.write(data)
+        print "write done"
+
+
 DEVICE = '/dev/ttyUSB0'
 
-import serial
+import serial_fix as serial
 import sys
 import os
 import time
 
 if os.getenv('DEVICE'):
     DEVICE = os.getenv('DEVICE')
+
+print "Use Device", DEVICE
 
 CHUNKSIZE = 4096
 FLASH_BLOCK_SIZE = 128 * 1024
@@ -67,8 +91,8 @@ if __name__ == '__main__':
                 '  erase: <start addr> <length>\n' +
                 ' all addresses and lengths are measured in bytes')
 
-    ser = serial.Serial(DEVICE, 115201,
-            stopbits=2, parity=serial.PARITY_NONE, timeout=1)
+    ser = serial.Serial()
+
     ctl = MemtransController(ser)
 
     if sys.argv[1] == 'jmp':
@@ -126,4 +150,3 @@ if __name__ == '__main__':
         for i in range(start, stop + 1, FLASH_BLOCK_SIZE):
             ctl.erase_flash(i)
             print 'erase {} finished'.format(hex(i))
-
