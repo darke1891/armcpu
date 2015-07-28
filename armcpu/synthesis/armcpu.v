@@ -50,21 +50,30 @@ module armcpu(
 	inout [15:0] eth_data,
 	output eth_cs,
 	output eth_cmd,
-	input eth_int
+	input eth_int,
+	output eth_ior,
+	output eth_iow,
+	output eth_reset
 );
 
 	// ------------------------------------------------------------------
 
 	assign rst = ~rst_key;
+	
+	// dm9000aep reset is low active
+	assign eth_reset = rst_key;
 
 
 	reg clk_cpu;
+	initial clk_cpu = 1'b0;
+	
 	assign single_step_mode = params[25];
 	wire [24:0] cpu_speed = params[24:0];
 	wire [4:0] monitor_data_shift = params[30:26];
 	assign rom_selector = params[31];
 	reg rom_selector_prev, set_rst_by_rom_selector;
 	reg [24:0] clk50M_cnt;
+	initial clk50M_cnt = {24{1'b0}};
 
 	wire kbd_int_ack, kbd_int_req;
 	wire [7:0] kbd_ascii;
@@ -130,7 +139,9 @@ module armcpu(
 		.eth_data(eth_data),
 		.eth_cs(eth_cs),
 		.eth_cmd(eth_cmd),
-		.eth_int(eth_int)
+		.eth_int(eth_int),
+		.eth_ior(eth_ior),
+		.eth_iow(eth_iow)
 		);
 
 	always @(posedge clk_cpu)

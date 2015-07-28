@@ -101,8 +101,8 @@ module phy_mem_ctrl(
 
 	always @(*)
 		if (addr[1:0]) begin
-			$warning("time=%g access unaligned addr: %h", $time, addr);
-			$fatal("exit due to previous error");
+			//$warning("time=%g access unaligned addr: %h", $time, addr);
+			//$fatal("exit due to previous error");
 		end
 
 	reg [31:0] write_addr_latch, write_data_latch;
@@ -122,6 +122,7 @@ module phy_mem_ctrl(
 			addr_is_com_stat = (addr == `COM_STAT_ADDR),
 			addr_is_eth_reg = (addr == `ETH_REG_ADDR),
 			addr_is_eth_data = (addr == `ETH_DATA_ADDR),
+			addr_is_eth = (addr_is_eth_data || addr_is_eth_data),
 			addr_is_flash = `ADDR_IS_FLASH(addr),
 			addr_is_segdisp = (addr == `SEGDISP_ADDR),
 			addr_is_rom = `ADDR_IS_ROM(addr),

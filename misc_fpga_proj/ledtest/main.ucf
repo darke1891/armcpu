@@ -21,3 +21,5 @@ NET "led[15]" LOC = F26;
 NET "clk11M" LOC = U25;
 NET "clk50M" LOC = U26;
 
+
+NET "rst_key" LOC = T1;

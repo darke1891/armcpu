@@ -48,7 +48,7 @@ module mmu(
 
 	always @(*) begin
 		if (instr_addr[1:0])
-			$warning("time=%g unaligned instr_addr: %h", $time, instr_addr);
+			;//$warning("time=%g unaligned instr_addr: %h", $time, instr_addr);
 	end
 
 	wire tlb_write_enable;
@@ -132,17 +132,23 @@ module mmu(
 		if (tlb_missing) begin
 			if (mem_opt_is_write) begin
 				exc_code = `EC_TLBS;
+				/*
 				$warning("time=%g TLB write missing, vaddr=%h",
 					$time, mem_vrt_addr);
+				*/
 			end else begin
 				exc_code = `EC_TLBL;
+				/*
 				$warning("time=%g TLB read missing, vaddr=%h",
 					$time, mem_vrt_addr);
+				*/
 			end
 		end else if (!tlb_writable && mem_opt_is_write) begin
 			exc_code = `EC_TLB_MOD;
+			/*
 			$warning("time=%g write to read-only page, vaddr=%h",
 				$time, mem_vrt_addr);
+			*/
 		end
 	end
 

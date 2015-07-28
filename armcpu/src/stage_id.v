@@ -148,7 +148,7 @@ module stage_id(
 
 	// set exception for invalid instruction
 	task invalid_instruction; begin
-		$warning("invalid instruction: %h", instr);
+		//$warning("invalid instruction: %h", instr);
 		exc_code_id2ex <= `EC_RI;
 		exc_badvaddr_id2ex <= instr;
 	end endtask

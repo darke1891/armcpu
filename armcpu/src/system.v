@@ -52,7 +52,9 @@ module system
 	inout [15:0] eth_data,
 	output eth_cs,
 	output eth_cmd,
-	input eth_int
+	input eth_int,
+	output eth_ior,
+	output eth_iow
 );
 
 	// ------------------------------------------------------------------
@@ -113,7 +115,9 @@ module system
 		.eth_data(eth_data),
 		.eth_cs(eth_cs),
 		.eth_cmd(eth_cmd),
-		.eth_int(eth_int)
+		.eth_int(eth_int),
+		.eth_ior(eth_ior),
+		.eth_iow(eth_iow)
 		);
 
 

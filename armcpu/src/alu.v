@@ -52,7 +52,7 @@ module alu(
 				result = opr1;
 			`ALU_OPT_MULT: ;	// ignore; processed by stage_ex
 			default: begin
-				$warning("illegal alu opt: %h", opt);
+				//$warning("illegal alu opt: %h", opt);
 				illegal_opt = 1;
 			end
 		endcase
