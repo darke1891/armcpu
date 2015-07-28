@@ -93,8 +93,10 @@ module phy_mem_ctrl(
 	// dm9000Aep eth
 	inout [15:0] eth_data,
 	output eth_cs,
-	output reg eth_cmd,
-	input eth_int
+	output eth_cmd,
+	input eth_int,
+	output eth_ior,
+	output eth_iow
 	);
 
 	// ------------------------------------------------------------------
@@ -122,7 +124,7 @@ module phy_mem_ctrl(
 			addr_is_com_stat = (addr == `COM_STAT_ADDR),
 			addr_is_eth_reg = (addr == `ETH_REG_ADDR),
 			addr_is_eth_data = (addr == `ETH_DATA_ADDR),
-			addr_is_eth = (addr_is_eth_data || addr_is_eth_data),
+			addr_is_eth = (addr_is_eth_reg || addr_is_eth_data),
 			addr_is_flash = `ADDR_IS_FLASH(addr),
 			addr_is_segdisp = (addr == `SEGDISP_ADDR),
 			addr_is_rom = `ADDR_IS_ROM(addr),
@@ -189,32 +191,35 @@ module phy_mem_ctrl(
 	always @(*) begin
 		data_out = 0;
 		case ({addr_is_ram, addr_is_com_data, addr_is_com_stat,
-				addr_is_eth_reg, addr_is_eth_data,
+				addr_is_eth,
 				addr_is_flash, addr_is_rom, addr_is_keyboard})
-			8'b10000000: data_out = ram_selector ? extram_data : baseram_data;
-			8'b01000000: data_out = {24'b0, com_data_in};
-			8'b00100000: data_out = {30'b0, com_read_ready, com_write_ready};
+			7'b1000000: data_out = ram_selector ? extram_data : baseram_data;
+			7'b0100000: data_out = {24'b0, com_data_in};
+			7'b0010000: data_out = {30'b0, com_read_ready, com_write_ready};
 			
-			8'b00010000: data_out = {16'b0, eth_data};
-			8'b00001000: data_out = {16'b0, eth_data};
+			7'b0001000: data_out = {16'b0, eth_data};
 			
-			8'b00000100: data_out = {16'b0, flash_data};
-			8'b00000010: data_out = rom_data;
-			8'b00000001: data_out = {24'b0, kbd_data};
+			7'b0000100: data_out = {16'b0, flash_data};
+			7'b0000010: data_out = rom_data;
+			7'b0000001: data_out = {24'b0, kbd_data};
 		endcase
 	end
 	
 	// write eth reg and data
 	assign eth_data = (state == WRITE_ETH) ? write_data_latch : {16{1'bz}};
-	// set 16-bits mode
-	assign eth_cs = 1'b1;
+	assign eth_cs = 1'b0;
 	// select index or data
+	/*
 	always @(negedge clk50M) begin
 		case ({addr_is_eth_reg, addr_is_eth_data})
 			2'b10: eth_cmd <= 1'b0;
 			2'b01: eth_cmd <= 1'b1;
 		endcase
 	end
+	*/
+	assign eth_cmd = addr_is_eth_data;
+	assign eth_ior = ~(state == READ && addr_is_eth);
+	assign eth_iow = ~(state == WRITE_ETH && addr_is_eth && write_cnt < `ETH_WRITE_WIDTH);
 
 	// assign int ack
 	always @(negedge clk50M) begin
@@ -239,15 +244,14 @@ module phy_mem_ctrl(
 				write_data_latch <= data_in;
 				write_cnt <= 0;
 				case ({addr_is_ram, addr_is_com_data, addr_is_flash,
-						addr_is_eth_reg, addr_is_eth_data,
+						addr_is_eth,
 						addr_is_segdisp, addr_is_vga})
-					7'b1000000: state <= WRITE_RAM;
-					7'b0100000: enable_com_write <= 1;
-					7'b0010000: state <= WRITE_FLASH;
-					7'b0001000: state <= WRITE_ETH;
-					7'b0000100: state <= WRITE_ETH;
-					7'b0000010: segdisp <= data_in;
-					7'b0000001: begin
+					6'b100000: state <= WRITE_RAM;
+					6'b010000: enable_com_write <= 1;
+					6'b001000: state <= WRITE_FLASH;
+					6'b000100: state <= WRITE_ETH;
+					6'b000010: segdisp <= data_in;
+					6'b000001: begin
 						vga_write_addr <= addr_vga_offset[`VGA_ADDR_WIDTH+1:2];
 						vga_write_data <= data_in[7:0];
 						vga_write_enable <= 1;
