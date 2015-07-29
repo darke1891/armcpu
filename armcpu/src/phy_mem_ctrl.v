@@ -32,8 +32,8 @@
 `define RAM_WRITE_WIDTH	1	// width of write signal
 `define RAM_WRITE_READ_RECOVERY 1	// recovery time before next read after write
 
-`define ETH_WRITE_WIDTH	1
-`define ETH_WRITE_READ_RECOVERY 1
+`define ETH_WRITE_WIDTH	4
+`define ETH_WRITE_READ_RECOVERY 2
 
 `define FLASH_WRITE_WIDTH 4
 `define FLASH_WRITE_READ_RECOVERY 2

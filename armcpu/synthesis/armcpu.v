@@ -53,7 +53,8 @@ module armcpu(
 	input eth_int,
 	output eth_ior,
 	output eth_iow,
-	output eth_reset
+	output eth_reset,
+    output eth_clk
 );
 
 	// ------------------------------------------------------------------
@@ -61,8 +62,14 @@ module armcpu(
 	assign rst = ~rst_key;
 	
 	// dm9000aep reset is low active
+    reg clk25M;
+    assign eth_clk = clk25M;
 	assign eth_reset = rst_key;
-
+	always @(posedge clk50M) begin
+        clk25M <= ~clk25M;
+        if (rst)
+            clk25M <= 0;
+    end
 
 	reg clk_cpu;
 	initial clk_cpu = 1'b0;
