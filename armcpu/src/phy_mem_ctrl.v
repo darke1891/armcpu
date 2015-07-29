@@ -157,7 +157,7 @@ module phy_mem_ctrl(
 	endtask
 
 	task rom_memtrans;
-		`include "rom/memtrans2.v"
+		`include "rom/memtrans.v"
 	endtask
 
 	always @(rom_addr, rom_selector)
