@@ -21,4 +21,5 @@ NET "eth_int" LOC = D13;
 NET "eth_ior" LOC = C13;
 NET "eth_iow" LOC = A13;
 NET "eth_reset" LOC = A14;
+NET "eth_clk" LOC = D14;
 # 25M D14
