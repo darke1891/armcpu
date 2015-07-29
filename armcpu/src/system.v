@@ -68,6 +68,7 @@ module system
 	wire [`VGA_ADDR_WIDTH-1:0] vga_write_addr;
 	wire [`VGA_DATA_WIDTH-1:0] vga_write_data;
 	wire vga_write_enable;
+    wire opt_is_lw;
 
 	cpu ucpu(.clk(clk_cpu), .clk_fast(clk50M), .rst(rst),
 
@@ -78,10 +79,14 @@ module system
 		.dev_mem_data_in(data_from_mem),
 		.dev_mem_data_out(data_to_mem),
 		.dev_mem_is_write(mem_is_write),
+        .opt_is_lw(opt_is_lw),
 		.dev_mem_busy(mem_busy));
 
 	phy_mem_ctrl umem(.clk50M(clk50M), .rst(rst),
-		.is_write(mem_is_write), .addr(mem_addr),
+		.is_write(mem_is_write), 
+        // XXX: dirty hack to cover the read signal
+        .opt_is_lw(opt_is_lw),
+        .addr(mem_addr),
 		.data_in(data_to_mem), .data_out(data_from_mem),
 		.busy(mem_busy),
 

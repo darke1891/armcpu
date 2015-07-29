@@ -31,6 +31,7 @@ module cpu(
 	input [31:0] dev_mem_data_in,
 	output [31:0] dev_mem_data_out,
 	output dev_mem_is_write,
+    output opt_is_lw,
 	input dev_mem_busy);
 
 	// -------------------------------------------------------------------
@@ -177,6 +178,7 @@ module cpu(
 		.dev_mem_data_in(dev_mem_data_in),
 		.dev_mem_data_out(dev_mem_data_out),
 		.dev_mem_is_write(dev_mem_is_write),
+		.opt_is_lw(opt_is_lw),
 		.dev_mem_busy(dev_mem_busy));
 
 endmodule

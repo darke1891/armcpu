@@ -44,6 +44,7 @@ module phy_mem_ctrl(
 	input rst,
 
 	input is_write,
+    input opt_is_lw,
 	input [31:0] addr,
 	input [31:0] data_in,
 	output reg [31:0] data_out,
@@ -156,7 +157,7 @@ module phy_mem_ctrl(
 	endtask
 
 	task rom_memtrans;
-		`include "rom/memtrans.v"
+		`include "rom/memtrans2.v"
 	endtask
 
 	always @(rom_addr, rom_selector)
@@ -217,8 +218,9 @@ module phy_mem_ctrl(
 		endcase
 	end
 	*/
-	assign eth_cmd = addr_is_eth_data;
-	assign eth_ior = ~(state == READ && addr_is_eth);
+	//assign eth_cmd = write_addr_latch == `ETH_DATA_ADDR;
+	assign eth_cmd = (state != WRITE_ETH)? addr_is_eth_data : (write_addr_latch == `ETH_DATA_ADDR);
+	assign eth_ior = ~(state == READ && addr_is_eth && opt_is_lw);
 	assign eth_iow = ~(state == WRITE_ETH && addr_is_eth && write_cnt < `ETH_WRITE_WIDTH);
 
 	// assign int ack

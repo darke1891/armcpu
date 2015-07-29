@@ -42,6 +42,7 @@ module mmu(
 	input [31:0] dev_mem_data_in,
 	output reg [31:0] dev_mem_data_out,
 	output dev_mem_is_write,
+	output opt_is_lw,
 	input dev_mem_busy);
 
 	// ------------------------------------------------------------------
@@ -80,6 +81,7 @@ module mmu(
 
 
 	assign dev_mem_is_write = state == WRITE_DO_WRITE;
+	assign opt_is_lw = data_opt == `MEM_OPT_LW;
 
 
 	// select a byte in input word according to addr
