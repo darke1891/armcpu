@@ -198,7 +198,7 @@ module phy_mem_ctrl(
 			7'b0100000: data_out = {24'b0, com_data_in};
 			7'b0010000: data_out = {30'b0, com_read_ready, com_write_ready};
 			
-			7'b0001000: data_out = {16'b0, eth_data};
+			7'b0001000: data_out = {16'b0, eth_data}; // all zero not work
 			
 			7'b0000100: data_out = {16'b0, flash_data};
 			7'b0000010: data_out = rom_data;
@@ -206,8 +206,24 @@ module phy_mem_ctrl(
 		endcase
 	end
 	
+    // try hierarchy ... work!
+    // remove reg ... try soft
+    
 	// write eth reg and data
+    // reg [15:0] eth_data_reg;
+    /*
+    // latch version
+    assign eth_data = eth_data_reg;
+    always @(*) begin
+        if (state == WRITE_ETH)
+            eth_data_reg = {16{1'b0}};//write_data_latch[15:0];
+        else
+            eth_data_reg = {16{1'bz}};
+    end
+    */
+	//assign eth_data = (state == WRITE_ETH) ? eth_data_reg : {16{1'bz}};
 	assign eth_data = (state == WRITE_ETH) ? write_data_latch : {16{1'bz}};
+    //assign eth_data = {16{1'bz}};
 	assign eth_cs = 1'b0;
 	// select index or data
 	/*
@@ -219,6 +235,9 @@ module phy_mem_ctrl(
 	end
 	*/
 	//assign eth_cmd = write_addr_latch == `ETH_DATA_ADDR;
+    //?assign eth_cmd = 1;
+    //assign eth_ior = 1;
+    //assign eth_iow = 1;
 	assign eth_cmd = (state != WRITE_ETH)? addr_is_eth_data : (write_addr_latch == `ETH_DATA_ADDR);
 	assign eth_ior = ~(state == READ && addr_is_eth && opt_is_lw);
 	assign eth_iow = ~(state == WRITE_ETH && addr_is_eth && write_cnt < `ETH_WRITE_WIDTH);
@@ -251,7 +270,7 @@ module phy_mem_ctrl(
 					6'b100000: state <= WRITE_RAM;
 					6'b010000: enable_com_write <= 1;
 					6'b001000: state <= WRITE_FLASH;
-					6'b000100: state <= WRITE_ETH;
+					6'b000100: begin state <= WRITE_ETH; /*eth_data_reg <= data_in;*/ end
 					6'b000010: segdisp <= data_in;
 					6'b000001: begin
 						vga_write_addr <= addr_vga_offset[`VGA_ADDR_WIDTH+1:2];
@@ -274,6 +293,7 @@ module phy_mem_ctrl(
 					state <= RECOVERY_READ;
 			end
 			WRITE_ETH: begin
+                //segdisp <= 8'haa;
 				write_cnt <= write_cnt_next;
 				if (write_cnt_next ==
 						`ETH_WRITE_READ_RECOVERY + `ETH_WRITE_WIDTH)
