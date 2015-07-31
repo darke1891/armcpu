@@ -160,7 +160,7 @@ module armcpu(
 	end
 
 	always @(*)
-		led[15:8] <= {kbd_int_req, kbd_ascii[6:0]};
+		led[15:8] <= {eth_int, kbd_int_req, kbd_ascii[5:0]};
 
 	digseg_driver useg0(.data(monitor_data[3:0]), .seg(segdisp0));
 	digseg_driver useg1(.data(monitor_data[7:4]), .seg(segdisp1));

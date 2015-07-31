@@ -3,7 +3,8 @@
 # $Date: Sat Nov 02 12:32:26 2013 +0800
 # $Author: jiakai <jia.kai66@gmail.com>
 
-export DEVICE=/dev/ttyUSB0
+#DEVICE =? /dev/ttyUSB0
+
 sudo chmod 666 $DEVICE
 
 #DATA_SIZE=895856
