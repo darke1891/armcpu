@@ -31,7 +31,7 @@ module main(
 	led_looper looper_hclk(clk50M, led1, rst_key);
     
     reg [7:0] data;
-    reg clk25M;
+    wire clk25M;
     
     digseg_driver digseg1(data[7:4], segdisp1);
     digseg_driver digseg2(data[3:0], segdisp0);
@@ -41,8 +41,9 @@ module main(
     assign eth_clk = clk25M;
     
     always @(posedge clk50M) begin
-        clk25M = ~clk25M;
+        //clk25M = ~clk25M;
     end
+    assign clk25M = clk11M;
     
 	always @(posedge clk25M) begin
 		state <= state + 1'b1;
@@ -59,7 +60,7 @@ module main(
     
     reg [15:0] eth_data_reg;
     
-    assign eth_cs = 1'b0;
+    assign eth_cs = 1'b1;
     always @(*) begin
         if (params[30]) begin
             eth_cmd = ~(state == 2 || state == 3);
@@ -76,6 +77,8 @@ module main(
     end
     
     assign eth_data = eth_data_reg;
+    
+    //assign eth_data = (eth_cmd) ? {16{1'bz}} : params[15:0];
 
 endmodule
 

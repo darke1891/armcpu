@@ -4,4 +4,5 @@
 # $Author: jiakai <jia.kai66@gmail.com>
 export CFLAGS="-Iuser/libs -Ikern/include"
 export LDFLAGS=obj/user/libuser.a
-$(dirname $0)/compile_userapp_raw.sh "$@"
+export OPTFLAG='-O0 -std=c99'
+$(dirname $0)/compile_userapp_raw.sh $1.c $1

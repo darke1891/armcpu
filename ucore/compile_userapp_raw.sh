@@ -7,7 +7,7 @@ GCCPREFIX=mips-sde-elf-
 
 LD=${GCCPREFIX}ld
 CC=${GCCPREFIX}gcc
-[ -z "$OPTFLAG" ]  && OPTFLAG=-O2
+[ -z "$OPTFLAG" ]  && OPTFLAG=-O0
 CFLAGS="-mips1 $OPTFLAG $CFLAGS -fno-builtin -nostdlib  -nostdinc -G0 -Wformat -EL -Wall -Werror"
 
 src=$1
