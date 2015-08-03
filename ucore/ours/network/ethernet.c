@@ -19,15 +19,15 @@ int ethernet_tx_data[2048];
 int ethernet_tx_len;
 
 unsigned int ethernet_read(unsigned int addr) {
-    *(unsigned int *)(ENET_IO_ADDR) = addr;
+    VPTR(ENET_IO_ADDR) = addr;
     nop();nop();nop();
-    return *(unsigned int *)(ENET_DATA_ADDR);
+    return VPTR(ENET_DATA_ADDR);
 }
 
 void ethernet_write(unsigned int addr, unsigned int data) {
-    *(unsigned int *)(ENET_IO_ADDR) = addr;
+    VPTR(ENET_IO_ADDR) = addr;
     nop();
-    *(unsigned int *)(ENET_DATA_ADDR) = data;
+    VPTR(ENET_DATA_ADDR) = data;
     nop();
 }
 
@@ -182,13 +182,13 @@ void ethernet_send() {
     // A dummy write
     ethernet_write(DM9000_REG_MWCMDX, 0);
     // select reg
-    *(unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MWCMD;
+    VPTR(ENET_IO_ADDR) = DM9000_REG_MWCMD;
     nop(); nop();
 	int i;
     for(i = 0 ; i < ethernet_tx_len ; i += 2){
         int val = ethernet_tx_data[i];
         if(i + 1 != ethernet_tx_len) val |= (ethernet_tx_data[i+1] << 8);
-        *(unsigned int *)(ENET_DATA_ADDR) = val;
+        VPTR(ENET_DATA_ADDR) = val;
         nop();
     }
     // write length
@@ -204,18 +204,18 @@ void ethernet_recv() {
     // a dummy read
     ethernet_read(DM9000_REG_MRCMDX);
     // select reg
-    *(unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MRCMDX1;
+    VPTR(ENET_IO_ADDR) = DM9000_REG_MRCMDX1;
     nop(); nop();
-    int status = LSB(*(unsigned int *)(ENET_DATA_ADDR));
+    int status = LSB(VPTR(ENET_DATA_ADDR));
     if(status != 0x01){
         ethernet_rx_len = -1;
         return;
     }
-    *(unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MRCMD;
+    VPTR(ENET_IO_ADDR) = DM9000_REG_MRCMD;
     nop(); nop();
-    status = MSB(*(unsigned int *)(ENET_DATA_ADDR));
+    status = MSB(VPTR(ENET_DATA_ADDR));
     nop(); nop();
-    ethernet_rx_len = *(unsigned int *)(ENET_DATA_ADDR);
+    ethernet_rx_len = VPTR(ENET_DATA_ADDR);
     nop(); nop();
     if(status & (RSR_LCS | RSR_RWTO | RSR_PLE |
                  RSR_AE | RSR_CE | RSR_FOE)) {
@@ -224,7 +224,7 @@ void ethernet_recv() {
     }
 	int i;
     for(i = 0 ; i < ethernet_rx_len ; i += 2) {
-        int data = *(unsigned int *)(ENET_DATA_ADDR);
+        int data = VPTR(ENET_DATA_ADDR);
         ethernet_rx_data[i] = LSB(data);
         ethernet_rx_data[i+1] = MSB(data);
     }
