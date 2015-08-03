@@ -240,7 +240,8 @@ module phy_mem_ctrl(
     //?assign eth_cmd = 1;
     //assign eth_ior = 1;
     //assign eth_iow = 1;
-	assign eth_cmd = (state != WRITE_ETH && opt_is_lw)? addr_is_eth_data : (write_addr_latch == `ETH_DATA_ADDR);
+    reg is_eth_data_latch;
+	assign eth_cmd = (state != WRITE_ETH && opt_is_lw)? addr_is_eth_data : is_eth_data_latch;
 	assign eth_ior = ~(state == READ && addr_is_eth && opt_is_lw);
 	assign eth_iow = ~(state == WRITE_ETH && 
             (write_cnt < `ETH_WRITE_WIDTH && write_cnt >= `ETH_WRITE_BEGIN));
@@ -259,6 +260,7 @@ module phy_mem_ctrl(
 		enable_com_write <= 0;
 		is_write_prev <= is_write;
 		vga_write_enable <= 0;
+        is_eth_data_latch <= 0;
 
 		if (rst)
 			state <= READ;
@@ -273,7 +275,7 @@ module phy_mem_ctrl(
 					6'b100000: state <= WRITE_RAM;
 					6'b010000: enable_com_write <= 1;
 					6'b001000: state <= WRITE_FLASH;
-					6'b000100: begin state <= WRITE_ETH; /*eth_data_reg <= data_in;*/ end
+					6'b000100: begin state <= WRITE_ETH; is_eth_data_latch <= addr_is_eth_data; end
 					6'b000010: segdisp <= data_in;
 					6'b000001: begin
 						vga_write_addr <= addr_vga_offset[`VGA_ADDR_WIDTH+1:2];

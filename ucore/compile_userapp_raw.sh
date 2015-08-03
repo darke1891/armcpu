@@ -15,6 +15,23 @@ out=$2
 obj=${out}.o
 
 
+
+if [ -d $1 ]
+then
+    dir=$1
+    src=$(ls $1/*.c)
+    out=a.out
+    obj=
+
+    set -x
+    for file in $src; do
+        $CC -c $file -DUSER_PROG $CFLAGS -o $file.o
+        obj=$obj" "$file.o
+    done
+    $LD -S -T $(dirname $0)/user/libs/user.ld $obj $LDFLAGS -o $dir/$out
+    exit
+fi
+
 if [ -z "$out" ]
 then
 	echo "usage: $0 <.c source file> <output file>"
