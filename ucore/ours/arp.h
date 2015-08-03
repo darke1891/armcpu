@@ -57,9 +57,6 @@ void arp_handle() {
                data + ARP_SENDER_MAC, 6);
         eth_memcpy(buf + ARP_TARGET_IP,
                data + ARP_SENDER_IP, 4);
-        while (1) {
-            ethernet_send();
-            delay_ms(1000);
-        }
+        ethernet_send();
     }
 }

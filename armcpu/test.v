@@ -118,6 +118,7 @@ module test;
 		kbd_data = 0;
 		eth_int = 0;
 		params[0] = 1;
+		params[1] = 1;
 		eth_data_m = 16'hzzzz;
 
 		// Wait 100 ns for global reset to finish

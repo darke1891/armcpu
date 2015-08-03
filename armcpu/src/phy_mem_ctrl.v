@@ -13,6 +13,7 @@
 
 `define ETH_REG_ADDR 	32'h1FD003E0
 `define ETH_DATA_ADDR 	32'h1FD003E4
+`define ETH_ADDR 	28'h1FD003E
 
 `define SEGDISP_ADDR	32'h1FD00400	// 7-segment display monitor
 
@@ -33,6 +34,7 @@
 `define RAM_WRITE_READ_RECOVERY 1	// recovery time before next read after write
 
 `define ETH_WRITE_WIDTH	4
+`define ETH_WRITE_BEGIN	1
 `define ETH_WRITE_READ_RECOVERY 2
 
 `define FLASH_WRITE_WIDTH 4
@@ -238,9 +240,10 @@ module phy_mem_ctrl(
     //?assign eth_cmd = 1;
     //assign eth_ior = 1;
     //assign eth_iow = 1;
-	assign eth_cmd = (state != WRITE_ETH)? addr_is_eth_data : (write_addr_latch == `ETH_DATA_ADDR);
+	assign eth_cmd = (state != WRITE_ETH && opt_is_lw)? addr_is_eth_data : (write_addr_latch == `ETH_DATA_ADDR);
 	assign eth_ior = ~(state == READ && addr_is_eth && opt_is_lw);
-	assign eth_iow = ~(state == WRITE_ETH && addr_is_eth && write_cnt < `ETH_WRITE_WIDTH);
+	assign eth_iow = ~(state == WRITE_ETH && 
+            (write_cnt < `ETH_WRITE_WIDTH && write_cnt >= `ETH_WRITE_BEGIN));
 
 	// assign int ack
 	always @(negedge clk50M) begin
@@ -296,8 +299,11 @@ module phy_mem_ctrl(
                 //segdisp <= 8'haa;
 				write_cnt <= write_cnt_next;
 				if (write_cnt_next ==
-						`ETH_WRITE_READ_RECOVERY + `ETH_WRITE_WIDTH)
+						`ETH_WRITE_READ_RECOVERY + `ETH_WRITE_WIDTH) begin
 					state <= RECOVERY_READ;
+                    write_addr_latch <= 'b0;
+                    write_data_latch <= 'b0;
+                end
 			end
 			RECOVERY_READ:
 				state <= READ;

@@ -192,48 +192,97 @@ void ethernet_phy_reset() {
     while(ethernet_phy_read(DM9000_PHY_REG_BMCR) & BMCR_RST);
 }
 
+void print_tx_data() {
+	int i;
+	cprintf("dump tx data: \n");
+	for (i=0; i<ethernet_tx_len; i++) {
+		int d = ethernet_tx_data[i];
+		cprintf("%02x", d);
+		if (i&1) cprintf(" ");
+		if ((i&15)==15) cprintf("\n");
+	}
+	cprintf("\n");
+}
+
+int get_send_addr() {
+	return ethernet_read(DM9000_REG_MWRL) | (ethernet_read(DM9000_REG_MWRH)<<8);
+}
+void set_send_addr(int addr) {
+	ethernet_write(DM9000_REG_MWRL, addr & 0xff);
+	ethernet_write(DM9000_REG_MWRH, (addr>>8) & 0xff);
+}
+
+int get_tx_addr() {
+	return ethernet_read(DM9000_REG_TRPAL) | (ethernet_read(DM9000_REG_TRPAH)<<8);
+}
+void set_tx_addr(int addr) {
+	ethernet_write(DM9000_REG_TRPAL, addr & 0xff);
+	ethernet_write(DM9000_REG_TRPAH, (addr>>8) & 0xff);
+}
 
 void ethernet_send() {
+	ethernet_tx_data[ethernet_tx_len] = 0;
+	print_tx_data();
 	int tmp, t1=0, t2=0;
+	/*
 	// make sure sending is begin
 	while ((tmp=ethernet_read ( 0x01 )) & (4|8)) {
 		t1++;
 		ethernet_write ( 0x01, (4|8));
 	}
+	*/
     // int is char
     // A dummy write
-    ethernet_write(DM9000_REG_MWCMDX, 0);
+	int val=0;
+	set_send_addr(get_tx_addr());
+	cprintf("addr before : %04x\n", get_send_addr());
+
+    *(volatile unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MWCMD;
+    nop(); nop();
+	for(int i = 0 ; i < ethernet_tx_len ; i += 2){
+    	ethernet_write(DM9000_REG_MWCMD, (i<<8) | 0xaa);
+	}
+	cprintf("addr before : %04x\n", get_send_addr());
+
+	set_send_addr(0);
+	cprintf("addr before : %04x\n", get_send_addr());
 
     // write length
     ethernet_write(DM9000_REG_TXPLH, MSB(ethernet_tx_len));
     ethernet_write(DM9000_REG_TXPLL, LSB(ethernet_tx_len));
 
     // select reg
-    //*(volatile unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MWCMD;
-    //nop(); nop();
-	delay_ms(1);
+    *(volatile unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MWCMD;
+    nop(); nop();
+	//delay_ms(1);
 	int i;
     for(i = 0 ; i < ethernet_tx_len ; i += 2){
-        int val = ethernet_tx_data[i];
-        if(i + 1 != ethernet_tx_len) val |= (ethernet_tx_data[i+1] << 8);
+        val = ethernet_tx_data[i] |= (ethernet_tx_data[i+1] << 8);
+		//XXX if(i + 1 != ethernet_tx_len) val |= (ethernet_tx_data[i+1] << 8);
+		//val = val+1;
         //*(unsigned volatile int *)(ENET_DATA_ADDR) = val;
+		//nop();
+        //nop(); nop(); nop();
 		ethernet_write(DM9000_REG_MWCMD, val);
-		//cprintf("addr : %d\n", ethernet_read(DM9000_REG_MWRL));
-        //nop();
+        //nop(); nop(); nop();
+		//cprintf("addr : %04x\n", get_send_addr());
     }
+	cprintf("addr after : %04x\n", get_send_addr());
+	cprintf("addr tx after : %04x\n", get_tx_addr());
+	//delay_ms(1);
 
-	delay_ms(1);
     // clear interrupt flag
-    //ethernet_write(DM9000_REG_ISR, ISR_PT);
+    ethernet_write(DM9000_REG_ISR, ISR_PT);
     // transfer data
     ethernet_write(DM9000_REG_TCR, TCR_TXREQ);
 
-	delay_ms(1);
 	//cprintf("ethernet_send len : %d\n", ethernet_tx_len);
+	/*
 	while (ethernet_read(DM9000_REG_TCR) & TCR_TXREQ) {
 		t1++;
 		nop();
 	}
+	*/
 
 	while (!((tmp=ethernet_read ( 0x01 )) & (4|8))) t2++;
 	cprintf("ethernet_send len : %d NSR : %02x TSR : %02x done\n", ethernet_tx_len, tmp,
@@ -247,7 +296,7 @@ void ethernet_send() {
 void ethernet_recv() {
 	int isr = ethernet_read(DM9000_REG_ISR);
 	if (isr & 1) {
-		//cprintf("Get RX intr\n");
+		cprintf("Get RX intr\n");
 		//ethernet_write(DM9000_REG_ISR, 1);
 	} else {
 		//ethernet_rx_len = -1;
@@ -260,7 +309,6 @@ void ethernet_recv() {
     nop(); nop();
     int status = LSB(*(unsigned volatile int *)(ENET_DATA_ADDR));
     if(status != 0x01){
-		cprintf("return1\n");
         ethernet_rx_len = -1;
         return;
     }
@@ -272,7 +320,6 @@ void ethernet_recv() {
     nop(); nop();
     if(status & (RSR_LCS | RSR_RWTO | RSR_PLE |
                  RSR_AE | RSR_CE | RSR_FOE)) {
- 		cprintf("return2\n");
         ethernet_rx_len = -1;
         return;
     }
@@ -350,9 +397,9 @@ void ethernet_intr()
 		ethernet_recv();
 		if(ethernet_rx_len == -1) {
 			no_pack ++;
-			//cprintf("No pack %d\n", no_pack);
-			//if (no_pack > 10) return;
-			//delay_ms(1000);
+			cprintf("No pack %d\n", no_pack);
+			if (no_pack > 10) return;
+			delay_ms(1000);
 			continue;
 		}
 		no_pack = 0;
