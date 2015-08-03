@@ -23,6 +23,8 @@ void ethernet_set_tx(int * dst, int type);
 #define ENET_IO_ADDR 0xBFD003E0
 #define ENET_DATA_ADDR 0xBFD003E4
 
+#define SEG_ADDR 0xBFD00400
+
 //DM9000 identifiers
 #define DM9000_VID             0x0A46
 #define DM9000_PID             0x9000

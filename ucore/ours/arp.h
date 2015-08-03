@@ -32,7 +32,7 @@ void arp_handle();
 #endif
 
 
-int IP_ADDR[4] = {192, 168, 1, 233};
+int IP_ADDR[4] = {192, 168, 2, 2};
 int ARP_FIX_HDR[] = {
     0x00, 0x01, // ethernet
     0x08, 0x00, // IP

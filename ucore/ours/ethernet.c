@@ -66,7 +66,7 @@ void eth_memcpy(int * dst, int * src, int length) {
 }
 
 
-int MAC_ADDR[6] = {0xf0, 0xde, 0xf1, 0x44, 0x55, 0x66};
+int MAC_ADDR[6] = {0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 int ethernet_rx_data[2048];
 int ethernet_rx_len;
 int ethernet_tx_data[2048];
@@ -222,7 +222,8 @@ void set_tx_addr(int addr) {
 
 void ethernet_send() {
 	ethernet_tx_data[ethernet_tx_len] = 0;
-	print_tx_data();
+	//print_tx_data();
+
 	int tmp, t1=0, t2=0;
 	/*
 	// make sure sending is begin
@@ -234,7 +235,10 @@ void ethernet_send() {
     // int is char
     // A dummy write
 	int val=0;
-	set_send_addr(get_tx_addr());
+	//set_send_addr(get_tx_addr());
+	cprintf("addr before : %04x\n", get_send_addr());
+	cprintf("addr tx before : %04x\n", get_tx_addr());
+	/*
 	cprintf("addr before : %04x\n", get_send_addr());
 
     *(volatile unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MWCMD;
@@ -246,14 +250,14 @@ void ethernet_send() {
 
 	set_send_addr(0);
 	cprintf("addr before : %04x\n", get_send_addr());
-
+	*/
     // write length
     ethernet_write(DM9000_REG_TXPLH, MSB(ethernet_tx_len));
     ethernet_write(DM9000_REG_TXPLL, LSB(ethernet_tx_len));
 
     // select reg
-    *(volatile unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MWCMD;
-    nop(); nop();
+    //*(volatile unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MWCMD;
+    //nop(); nop();
 	//delay_ms(1);
 	int i;
     for(i = 0 ; i < ethernet_tx_len ; i += 2){
@@ -267,8 +271,6 @@ void ethernet_send() {
         //nop(); nop(); nop();
 		//cprintf("addr : %04x\n", get_send_addr());
     }
-	cprintf("addr after : %04x\n", get_send_addr());
-	cprintf("addr tx after : %04x\n", get_tx_addr());
 	//delay_ms(1);
 
     // clear interrupt flag
@@ -291,6 +293,9 @@ void ethernet_send() {
 	//ethernet_write ( 0x01, (4|8));
 	//cprintf("ethernet_send len : %d NSR : %02x done\n", ethernet_tx_len, ethernet_read ( 0x01 ));
 	cprintf("t12 : %d, %d\n", t1, t2);
+
+	cprintf("addr after : %04x\n", get_send_addr());
+	cprintf("addr tx after : %04x\n", get_tx_addr());
 }
 
 void ethernet_recv() {
@@ -397,9 +402,10 @@ void ethernet_intr()
 		ethernet_recv();
 		if(ethernet_rx_len == -1) {
 			no_pack ++;
-			cprintf("No pack %d\n", no_pack);
-			if (no_pack > 10) return;
-			delay_ms(1000);
+			if ((no_pack & 0xff) == 0)
+				cprintf("No pack %d\n", no_pack);
+			if (no_pack > 10000) return;
+			delay_ms(1);
 			continue;
 		}
 		no_pack = 0;
@@ -429,6 +435,7 @@ int from_hex(char *s) {
 }
 
 int main(int argc, char**argv) {
+	((int*)SEG_ADDR)[0] = 0xab;
 
     cprintf("argc : %d\n", argc);
     for (int i=0; i<argc; i++)

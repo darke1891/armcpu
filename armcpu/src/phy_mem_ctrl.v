@@ -301,8 +301,6 @@ module phy_mem_ctrl(
 				if (write_cnt_next ==
 						`ETH_WRITE_READ_RECOVERY + `ETH_WRITE_WIDTH) begin
 					state <= RECOVERY_READ;
-                    write_addr_latch <= 'b0;
-                    write_data_latch <= 'b0;
                 end
 			end
 			RECOVERY_READ:
