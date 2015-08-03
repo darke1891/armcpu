@@ -1,4 +1,4 @@
-/* 
+/*
 * @Author: BlahGeek
 * @Date:   2014-06-05
 * @Last Modified by:   BlahGeek
@@ -12,7 +12,7 @@
 void delay_ms(int ms) {
 	int i, j;
     for(i = 0 ; i < ms ; i += 1)
-        for(j = 0 ; j < 446 ; j += 1);
+        for(j = 0 ; j < 446 ; j += 1) nop();
 }
 
 void delay_us(int us) {
