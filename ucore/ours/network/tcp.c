@@ -10,11 +10,28 @@
 #include "ip.h"
 #include "defs.h"
 #include "utils.h"
+#include "../opengl.h"
 
 #define WINDOW_SIZE 1000
 #define INIT_SEQ 1001
 #define TIMEOUT 30
 
+int mystrcmp(const char *s1, const char *s2) {
+    while (*s1 != '\0' && *s1 == *s2) {
+        s1 ++, s2 ++;
+    }
+    return (int)((unsigned char)*s1 - (unsigned char)*s2);
+}
+
+char *mystrfind(const char *s, char c) {
+    while (*s != '\0') {
+        if (*s == c) {
+            break;
+        }
+        s ++;
+    }
+    return (char *)s;
+}
 
 int tcp_inited = 0;
 
@@ -24,11 +41,6 @@ int tcp_inited = 0;
 int http_r_len = 0;
 char* pagedata = 0;
 int http_request[MAX_HTTP_REQUEST_LEN];
-	// "<!DOCTYPE html>\n"
-	// "<html>\n"
-	// "	<h1>It works!</h1>\n"
-	// "	<p>�������Լ�ԭ������ʵ����������CPU��һ��ŭ�����������ڵ������������������б��ڻ��۳���һ�����������ҹ����ˣ��ҹ����ˣ���</p>\n"
-	// "</html>";
 
 int MYDATA[MYDATA_LENGTH * 4];
 #define BUF_LENGTH MYDATA_LENGTH*4
@@ -36,11 +48,6 @@ int MYDATA[MYDATA_LENGTH * 4];
 // int BUF[BUF_LENGTH];
 int tcp_recving = 0, tcp_sending = 0;
 
-/*
-int MYDATA_LENGTH;
-char* truedata = "<div>It works!asdflkajsdlfjasldkfjalksdjf</div>      ";
-int* MYDATA;
-*/
 
 #define CHUNK_LEN 1000
 #define LAST_CHUNK_POS ((MYDATA_LENGTH / CHUNK_LEN) * CHUNK_LEN)
@@ -53,12 +60,20 @@ int recv_pos = 0;
 int recv_len = 0;
 
 int tcp_timeout = 0;
+int _is_pic = 0;
 
 int tcp_src_port, tcp_dst_port;
 int tcp_src_addr[4], tcp_dst_addr[4];
 int tcp_ack = 0, tcp_seq = INIT_SEQ;
 int tcp_state = TCP_CLOSED;
 
+int is_pic(char *name) {
+    if (!name) return 0;
+    char * suf = mystrfind(name, '.');
+    if (mystrcmp(suf, ".pic") == 0)
+        return 1;
+    return 0;
+}
 
 void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 		if(tcp_inited == 0)
@@ -66,6 +81,7 @@ void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 			tcp_inited = 1;
 			char *prefix = "GET /";
 			char *suffix = "\r\n\r\n";
+            _is_pic = is_pic(pagedata);
 			http_r_len = 0;
 			int i=0;
 			#define data_push_back(ss) \
@@ -94,7 +110,7 @@ void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 }
 
 void tcp_handle(int length) {
-	cprintf("enter tcp_handle\n");
+	// cprintf("enter tcp_handle\n");
 	if(tcp_inited == 0)
 	{
 		tcp_inited = 1;
@@ -159,15 +175,19 @@ void tcp_handle(int length) {
         tcp_state = TCP_ESTABLISHED;
         return;
     }
+	if ((data[TCP_FLAGS] & TCP_FLAG_FIN) && !(data[TCP_FLAGS] & TCP_FLAG_PSH)) {
+		tcp_ack +=  1;
+		tcp_send_packet(TCP_FLAG_FIN | TCP_FLAG_ACK, 0, 0);
+		tcp_state = TCP_CLOSED;
+	}
     if(tcp_state == TCP_ESTABLISHED) {
 			int tcphdrlen = 4*(int)(data[TCP_DATA_OFFSET]>>4);
 			int datalen = length - tcphdrlen;
-			cprintf("%d\n", datalen);
 			if (datalen <= 0) return;
 			// tcp_seq = mem2int(data + TCP_ACK, 4);
-			cprintf("tcp_ack: %d, recv_seq: %d\n", tcp_ack, mem2int(data + TCP_SEQ, 4));
+			// cprintf("tcp_ack: %d, recv_seq: %d\n", tcp_ack, mem2int(data + TCP_SEQ, 4));
 	        if (tcp_ack != mem2int(data + TCP_SEQ, 4)) {
-				cprintf("tcp_handle: sequence incorrect\n");
+				//cprintf("tcp_handle: sequence incorrect\n");
 				// out of order pkt, re ACK
 				tcp_send_packet(TCP_FLAG_ACK, 0, 0);
 				return;
@@ -175,25 +195,54 @@ void tcp_handle(int length) {
 			// in order pkt
 			tcp_ack += datalen;
 			recv_len += datalen;
-			cprintf("recved total length: %d\n", recv_len);
+			if ((recv_len & 0xffff) == 0)
+				;//cprintf("recved total length: %d bytes\n", recv_len);
 			// cprintf("tcp: datalen: %d, tcphdrlen: %d", datalen, tcphdrlen);
+
+            if (_is_pic) {
+                int offset = 0;
+                if (recv_pos == 0) {
+					#define get_int(val) \
+						val = (data+tcphdrlen)[offset++]; \
+						val = (val << 8) | ((data+tcphdrlen)[offset++]); \
+						val = (val << 8) | ((data+tcphdrlen)[offset++]); \
+						val = (val << 8) | ((data+tcphdrlen)[offset++]);
+
+                    int height, width;
+					get_int(height);
+					get_int(width);
+					cprintf("get size : %d %d \n", width, height);
+                    gl_set_size(width, height);
+                    offset = 2;
+                }
+                for (;offset<datalen; offset++)
+                    gl_push_pixel(*(data+tcphdrlen+offset));
+            } else {
+                for (int i=0; i<datalen; i++)
+				 	cprintf("%c", (char)*(data+tcphdrlen+i));
+            }
+
 			if (tcp_recving) {
 				if (recv_pos+datalen > BUF_LENGTH) {
-					cprintf("tcp_handle: recving buffer overflow\n");
+					// cprintf("tcp_handle: recving buffer overflow\n");
 					// return;
 				} else {
-					if (datalen>0)
-						eth_memcpy(BUF+recv_pos,data+tcphdrlen, datalen);
-						recv_pos += datalen;
-					}
-				cprintf("http recved: \n");
+				if (datalen>0)
+					eth_memcpy(BUF+recv_pos,data+tcphdrlen, datalen);
+					recv_pos += datalen;
+				}
+				// cprintf("http recved: \n");
 				// for (int i = 0; i < datalen;++i)
 				// 	cprintf("%c", (char)*(data+tcphdrlen+i));
-				cprintf("\n");
-				// if (data[TCP_FLAGS] & TCP_FLAG_PSH)
-					tcp_send_packet(TCP_FLAG_ACK, 0, 0);
-				// cprintf("%x\n", tcp_ack);
+				// cprintf("\n");
 
+				if (data[TCP_FLAGS] & TCP_FLAG_FIN) {
+					tcp_ack +=  1;
+					tcp_send_packet(TCP_FLAG_ACK | TCP_FLAG_FIN, 0, 0);
+					tcp_state = TCP_CLOSED;
+				} else {
+					tcp_send_packet(TCP_FLAG_ACK, 0, 0);
+				}
 
 			// if (tcp_sending && (data[TCP_FLAGS] & TCP_FLAG_ACK)) {
       //   tcp_seq = mem2int(data + TCP_ACK, 4);

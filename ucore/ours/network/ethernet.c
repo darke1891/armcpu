@@ -259,8 +259,7 @@ void ethernet_intr()
 		ethernet_recv();
 		if(ethernet_rx_len == -1) {
 			no_pack ++;
-			if ((no_pack & 0xff) == 0)
-				cprintf("No pack %d\n", no_pack);
+			//if ((no_pack & 0xff) == 0) cprintf("No pack %d\n", no_pack);
 			if (no_pack > 10000) return;
 			delay_ms(1);
 			continue;
@@ -272,7 +271,7 @@ void ethernet_intr()
 		    arp_handle();
 		} else
 		if(type == ETHERNET_TYPE_IP) {
-			cprintf("handle ip\n");
+			//cprintf("handle ip\n");
 		    ip_handle();
         } else
 			cprintf("Unknow package type %d\n", type);

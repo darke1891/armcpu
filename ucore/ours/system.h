@@ -7,6 +7,10 @@
 #ifndef __HEADER_SYSTEM__
 #define __HEADER_SYSTEM__
 
+#if __STDC_VERSION__ >= 199901L
+#define asm __asm
+#endif
+
 #include "ps2_code.h"
 #define CPU_FREQUENCY	12500000
 
