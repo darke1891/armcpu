@@ -20,9 +20,10 @@ int tcp_inited = 0;
 
 #define MYDATA_LENGTH (724/4)
 // hard code your http request here.
-#define HTTP_REQUEST_LEN (100/4)
-char* pagedata = "GET / HTTP/1.0\r\nHost: local_host\r\nUser-Agent: thu_mips\r\n\r\n";
-int http_request[HTTP_REQUEST_LEN];
+#define MAX_HTTP_REQUEST_LEN (500/4)
+int http_r_len = 0;
+char* pagedata = "GET / HTTP/1.0\r\nHost: baidu.com\r\nUser-Agent: thu_mips\r\n\r\n";
+int http_request[MAX_HTTP_REQUEST_LEN];
 	// "<!DOCTYPE html>\n"
 	// "<html>\n"
 	// "	<h1>It works!</h1>\n"
@@ -62,9 +63,11 @@ void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 		if(tcp_inited == 0)
 		{
 			tcp_inited = 1;
-			int i;
-			for(i = 0; i < HTTP_REQUEST_LEN; ++i)
-				http_request[i] = pagedata[i];
+			for(http_r_len = 0; http_r_len < MAX_HTTP_REQUEST_LEN
+				&& pagedata[http_r_len] != '\0'; ++http_r_len)
+				http_request[http_r_len] = pagedata[http_r_len];
+				
+				http_request[http_r_len] = pagedata[http_r_len];
 		}
 		if (tcp_state != TCP_CLOSED)
 			return;
@@ -121,7 +124,7 @@ void tcp_handle(int length) {
 			tcp_state = TCP_ESTABLISHED;
 			cprintf("TCP handshake complete\n");
 			// send out http request
-			tcp_send_packet(TCP_FLAG_PSH, http_request, HTTP_REQUEST_LEN);
+			tcp_send_packet(TCP_FLAG_PSH, http_request, http_r_len);
 			tcp_recving = 1;
 			return;
 		}
@@ -162,7 +165,7 @@ void tcp_handle(int length) {
 					cprintf("\n");
         tcp_ack = mem2int(data + TCP_SEQ, 4) + datalen;
 				tcp_send_packet(TCP_FLAG_ACK, 0, 0);
-			
+
 			// if (tcp_sending && (data[TCP_FLAGS] & TCP_FLAG_ACK)) {
       //   tcp_seq = mem2int(data + TCP_ACK, 4);
       //   // int pos = tcp_seq - (INIT_SEQ + 1);
