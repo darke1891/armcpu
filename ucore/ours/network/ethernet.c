@@ -24,15 +24,12 @@ int ethernet_tx_len;
 
 unsigned int ethernet_read(unsigned int addr) {
     VPTR(ENET_IO_ADDR) = addr;
-    nop();nop();nop();
     return VPTR(ENET_DATA_ADDR);
 }
 
 void ethernet_write(unsigned int addr, unsigned int data) {
     VPTR(ENET_IO_ADDR) = addr;
-    nop();
     VPTR(ENET_DATA_ADDR) = data;
-    nop();
 }
 
 void ethernet_init() {
@@ -233,7 +230,7 @@ void ethernet_recv() {
         ethernet_rx_data[i+1] = MSB(data);
     }
     // clear intrrupt
-    ethernet_write(DM9000_REG_ISR, ISR_PR);
+    //ethernet_write(DM9000_REG_ISR, ISR_PR);
 }
 
 void ethernet_set_tx(int * dst, int type) {

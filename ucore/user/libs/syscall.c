@@ -156,3 +156,8 @@ sys_redraw_console() {
 	syscall(SYS_redraw_console);
 }
 
+
+void
+sys_wait_eth_int() {
+    syscall(SYS_wait_eth_int);
+}

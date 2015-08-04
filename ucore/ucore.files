@@ -164,3 +164,4 @@ user/waitkill.c
 user/yield.c
 kern/driver/eth.c
 kern/driver/eth.h
+kern/driver/dm9000aep.h
