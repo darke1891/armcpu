@@ -244,8 +244,8 @@ void ethernet_set_tx(int * dst, int type) {
 }
 
 void set_init_rx_data() {
-    eth_memcpy(ethernet_tx_data + ETHERNET_DST_MAC, R_MAC_ADDR, 6);
-    eth_memcpy(ethernet_tx_data + ETHERNET_SRC_MAC, MAC_ADDR, 6);
+    eth_memcpy(ethernet_rx_src, R_MAC_ADDR, 6);
+    eth_memcpy(ethernet_rx_data + ETHERNET_HDR_LEN + IP_SRC, REMOTE_IP_ADDR, 4);
 }
 
 void send_first_tcp_pack() {
@@ -264,7 +264,7 @@ void ethernet_intr()
 			no_pack ++;
 			if ((no_pack & 0xff) == 0)
 				cprintf("No pack %d\n", no_pack);
-			if (no_pack > 100000) return;
+			if (no_pack > 10000) return;
 			delay_ms(1);
 			continue;
 		}
