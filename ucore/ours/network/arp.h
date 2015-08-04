@@ -5,6 +5,8 @@
 #include "ethernet.h"
 
 extern int IP_ADDR[4];
+extern int REMOTE_IP_ADDR[4];
+
 
 #define ETHERNET_TYPE_ARP 0x0806
 
@@ -19,7 +21,7 @@ extern int IP_ADDR[4];
 
 #define ARP_BODY_LEN (ARP_TARGET_IP + 4)
 
-// handle arp 
+// handle arp
 void arp_handle();
 
 #endif
