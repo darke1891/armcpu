@@ -18,11 +18,11 @@
 
 int tcp_inited = 0;
 
-#define MYDATA_LENGTH (724/4)
+#define MYDATA_LENGTH (8004/4)
 // hard code your http request here.
 #define MAX_HTTP_REQUEST_LEN (500/4)
 int http_r_len = 0;
-char* pagedata = "GET / \r\n\r\n";
+char* pagedata = 0;
 int http_request[MAX_HTTP_REQUEST_LEN];
 	// "<!DOCTYPE html>\n"
 	// "<html>\n"
@@ -50,6 +50,7 @@ int send_len = 0;
 int last_chunk_pos = 0;
 
 int recv_pos = 0;
+int recv_len = 0;
 
 int tcp_timeout = 0;
 
@@ -63,11 +64,22 @@ void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 		if(tcp_inited == 0)
 		{
 			tcp_inited = 1;
-			for(http_r_len = 0; http_r_len < MAX_HTTP_REQUEST_LEN
-				&& pagedata[http_r_len] != '\0'; ++http_r_len)
-				http_request[http_r_len] = pagedata[http_r_len];
+			char *prefix = "GET /";
+			char *suffix = "\r\n\r\n";
+			http_r_len = 0;
+			int i=0;
+			#define data_push_back(ss) \
+				if (ss != 0) {\
+					for (i=0; i+http_r_len < MAX_HTTP_REQUEST_LEN && \
+						ss[i] != '\0'; i++) \
+						http_request[http_r_len+i] = ss[i]; \
+					http_r_len += i; \
+				}
 
-				http_request[http_r_len] = pagedata[http_r_len];
+			data_push_back(prefix);
+			data_push_back(pagedata);
+			data_push_back(suffix);
+			http_request[http_r_len] = '\0';
 		}
 		if (tcp_state != TCP_CLOSED)
 			return;
@@ -82,6 +94,7 @@ void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 }
 
 void tcp_handle(int length) {
+	cprintf("enter tcp_handle\n");
 	if(tcp_inited == 0)
 	{
 		tcp_inited = 1;
@@ -92,7 +105,7 @@ void tcp_handle(int length) {
     else tcp_timeout = 0;
     if(tcp_timeout == TIMEOUT) {
         tcp_timeout = 0;
-        tcp_state = TCP_CLOSED;
+        // tcp_state = TCP_CLOSED;
     }
     if((data[TCP_FLAGS] & TCP_FLAG_SYN) &&
 		(tcp_state == TCP_CLOSED || tcp_state == 0)) {
@@ -125,6 +138,7 @@ void tcp_handle(int length) {
 			cprintf("TCP handshake complete\n");
 			// send out http request
 			tcp_send_packet(TCP_FLAG_PSH|TCP_FLAG_ACK, http_request, http_r_len);
+			tcp_seq += http_r_len;
 			tcp_recving = 1;
 			return;
 		}
@@ -148,23 +162,38 @@ void tcp_handle(int length) {
     if(tcp_state == TCP_ESTABLISHED) {
 			int tcphdrlen = 4*(int)(data[TCP_DATA_OFFSET]>>4);
 			int datalen = length - tcphdrlen;
-
+			cprintf("%d\n", datalen);
+			if (datalen <= 0) return;
+			// tcp_seq = mem2int(data + TCP_ACK, 4);
+			cprintf("tcp_ack: %d, recv_seq: %d\n", tcp_ack, mem2int(data + TCP_SEQ, 4));
+	        if (tcp_ack != mem2int(data + TCP_SEQ, 4)) {
+				cprintf("tcp_handle: sequence incorrect\n");
+				// out of order pkt, re ACK
+				tcp_send_packet(TCP_FLAG_ACK, 0, 0);
+				return;
+			}
+			// in order pkt
+			tcp_ack += datalen;
+			recv_len += datalen;
+			cprintf("recved total length: %d\n", recv_len);
 			// cprintf("tcp: datalen: %d, tcphdrlen: %d", datalen, tcphdrlen);
-
-			if (tcp_recving && (data[TCP_FLAGS] & TCP_FLAG_PSH)) {
+			if (tcp_recving) {
 				if (recv_pos+datalen > BUF_LENGTH) {
 					cprintf("tcp_handle: recving buffer overflow\n");
-					return;
-				}
-				if (datalen>0) eth_memcpy(BUF+recv_pos,
-					data+tcphdrlen, datalen);
-					recv_pos += datalen;
-					cprintf("http recved: \n");
-					for (int i = 0; i < datalen;++i)
-						cprintf("%c", (char)*(data+tcphdrlen+i));
-					cprintf("\n");
-        tcp_ack = mem2int(data + TCP_SEQ, 4) + datalen;
-				tcp_send_packet(TCP_FLAG_ACK, 0, 0);
+					// return;
+				} else {
+					if (datalen>0)
+						eth_memcpy(BUF+recv_pos,data+tcphdrlen, datalen);
+						recv_pos += datalen;
+					}
+				cprintf("http recved: \n");
+				// for (int i = 0; i < datalen;++i)
+				// 	cprintf("%c", (char)*(data+tcphdrlen+i));
+				cprintf("\n");
+				// if (data[TCP_FLAGS] & TCP_FLAG_PSH)
+					tcp_send_packet(TCP_FLAG_ACK, 0, 0);
+				// cprintf("%x\n", tcp_ack);
+
 
 			// if (tcp_sending && (data[TCP_FLAGS] & TCP_FLAG_ACK)) {
       //   tcp_seq = mem2int(data + TCP_ACK, 4);
@@ -206,7 +235,7 @@ void tcp_send_packet(int flags, int * data, int length) {
     packet[TCP_URGEN + 1] = 0;
     packet[TCP_CHECKSUM] = 0;
     packet[TCP_CHECKSUM + 1] = 0;
-    int2mem(packet + TCP_WINDOW, 2, 1000);
+    int2mem(packet + TCP_WINDOW, 2, WINDOW_SIZE);
     eth_memcpy(packet + TCP_DATA, data, length);
     // calc checksum
     int sum = 0;

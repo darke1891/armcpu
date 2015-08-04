@@ -339,7 +339,10 @@ int main(int argc, char**argv) {
     for (int i=0; i<argc; i++)
         cprintf("argv[%d] : %s\n", i, argv[i]);
 
-	if (argc == 2 && argv[1][0] == 'r') {
+	if (argc >= 2 && argv[1][0] == 'r') {
+        extern char* pagedata;
+        if (argc >= 3) pagedata = argv[2];
+        else pagedata = 0;
 		print_device_info();
 		cprintf("Begin listen pack.....\n");
 		ethernet_intr();
