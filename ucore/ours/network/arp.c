@@ -9,6 +9,7 @@
 #include "utils.h"
 
 int IP_ADDR[4] = {192, 168, 2, 2};
+int REMOTE_IP_ADDR[4] = {192, 168, 2, 1};
 int ARP_FIX_HDR[] = {
     0x00, 0x01, // ethernet
     0x08, 0x00, // IP

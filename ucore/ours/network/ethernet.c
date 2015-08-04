@@ -14,21 +14,24 @@
 #include "tcp.h"
 
 int MAC_ADDR[6] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+// hard code remote mac addr when first send
+int R_MAC_ADDR[6] = {0x28,0xd2,0x44,0x09,0xb1,0x49};
 int ethernet_rx_data[2048];
 int ethernet_rx_len;
 int ethernet_tx_data[2048];
 int ethernet_tx_len;
 
+
 unsigned int ethernet_read(unsigned int addr) {
-    *(unsigned int *)(ENET_IO_ADDR) = addr;
+    VPTR(ENET_IO_ADDR) = addr;
     nop();nop();nop();
-    return *(unsigned int *)(ENET_DATA_ADDR);
+    return VPTR(ENET_DATA_ADDR);
 }
 
 void ethernet_write(unsigned int addr, unsigned int data) {
-    *(unsigned int *)(ENET_IO_ADDR) = addr;
+    VPTR(ENET_IO_ADDR) = addr;
     nop();
-    *(unsigned int *)(ENET_DATA_ADDR) = data;
+    VPTR(ENET_DATA_ADDR) = data;
     nop();
 }
 
@@ -183,13 +186,13 @@ void ethernet_send() {
     // A dummy write
     ethernet_write(DM9000_REG_MWCMDX, 0);
     // select reg
-    *(unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MWCMD;
+    VPTR(ENET_IO_ADDR) = DM9000_REG_MWCMD;
     nop(); nop();
 	int i;
     for(i = 0 ; i < ethernet_tx_len ; i += 2){
         int val = ethernet_tx_data[i];
         if(i + 1 != ethernet_tx_len) val |= (ethernet_tx_data[i+1] << 8);
-        *(unsigned int *)(ENET_DATA_ADDR) = val;
+        VPTR(ENET_DATA_ADDR) = val;
         nop();
     }
     // write length
@@ -205,18 +208,18 @@ void ethernet_recv() {
     // a dummy read
     ethernet_read(DM9000_REG_MRCMDX);
     // select reg
-    *(unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MRCMDX1;
+    VPTR(ENET_IO_ADDR) = DM9000_REG_MRCMDX1;
     nop(); nop();
-    int status = LSB(*(unsigned int *)(ENET_DATA_ADDR));
+    int status = LSB(VPTR(ENET_DATA_ADDR));
     if(status != 0x01){
         ethernet_rx_len = -1;
         return;
     }
-    *(unsigned int *)(ENET_IO_ADDR) = DM9000_REG_MRCMD;
+    VPTR(ENET_IO_ADDR) = DM9000_REG_MRCMD;
     nop(); nop();
-    status = MSB(*(unsigned int *)(ENET_DATA_ADDR));
+    status = MSB(VPTR(ENET_DATA_ADDR));
     nop(); nop();
-    ethernet_rx_len = *(unsigned int *)(ENET_DATA_ADDR);
+    ethernet_rx_len = VPTR(ENET_DATA_ADDR);
     nop(); nop();
     if(status & (RSR_LCS | RSR_RWTO | RSR_PLE |
                  RSR_AE | RSR_CE | RSR_FOE)) {
@@ -225,7 +228,7 @@ void ethernet_recv() {
     }
 	int i;
     for(i = 0 ; i < ethernet_rx_len ; i += 2) {
-        int data = *(unsigned int *)(ENET_DATA_ADDR);
+        int data = VPTR(ENET_DATA_ADDR);
         ethernet_rx_data[i] = LSB(data);
         ethernet_rx_data[i+1] = MSB(data);
     }
@@ -240,12 +243,20 @@ void ethernet_set_tx(int * dst, int type) {
     ethernet_tx_data[13] = LSB(type);
 }
 
+void set_init_rx_data() {
+    eth_memcpy(ethernet_tx_data + ETHERNET_DST_MAC, R_MAC_ADDR, 6);
+    eth_memcpy(ethernet_tx_data + ETHERNET_SRC_MAC, MAC_ADDR, 6);
+}
+
+void send_first_tcp_pack() {
+    tcp_handshake(58888, 8888, IP_ADDR, REMOTE_IP_ADDR);
+    tcp_start_recving();
+}
+
 void ethernet_intr()
 {
-  int src_port = 58888, dst_port = 51111,
-  src_addr[4] = {1, 1, 1, 1}, dst_addr[4] = {1, 1, 1, 1};
-  tcp_handshake(src_port, dst_port, src_addr, dst_addr);
-  tcp_start_recving();
+    set_init_rx_data();
+    send_first_tcp_pack();
 	int no_pack = 0;
 	while(1)
 	{

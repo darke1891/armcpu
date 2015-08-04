@@ -33,7 +33,9 @@
 /* fetch program from serial bus */
 #define SYS_fetchrun		241	 // a prime number :)
 
-#define SYS_redraw_console		242
+#define SYS_redraw_console	242
+
+#define SYS_wait_eth_int    243
 
 /* OLNY FOR LAB6 */
 #define SYS_lab6_set_priority 255

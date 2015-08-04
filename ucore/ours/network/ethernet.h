@@ -7,7 +7,9 @@ extern int ethernet_rx_len;
 extern int ethernet_tx_data[2048];
 extern int ethernet_tx_len;
 
-#define ETHERNET_ISR (*(unsigned int *)ENET_INT_ADDR)
+#define VPTR(x) (*(unsigned volatile int *)x)
+
+#define ETHERNET_ISR (VPTRENET_INT_ADDR)
 
 #define ETHERNET_DST_MAC 0
 #define ETHERNET_SRC_MAC 6
