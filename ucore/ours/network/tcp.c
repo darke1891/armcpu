@@ -1,4 +1,4 @@
-/* 
+/*
 * @Author: BlahGeek
 * @Date:   2014-06-05
 * @Last Modified by:   BlahGeek
@@ -19,14 +19,18 @@
 
 int tcp_inited = 0;
 
-char* pagedata = 
+char* pagedata =
 	"<!DOCTYPE html>\n"
 	"<html>\n"
 	"	<h1>It works!</h1>\n"
-	"	<p>ÕâÊÇÀ´×Ô¼ÆÔ­Èí¹¤ÁªºÏÊµÑéÄæ¹â×éµÄCPUµÄÒ»ÉùÅ­ºð£¬ÊÇÍòÍòÒÚµç×ÓÔÚÎÞÊý¸ö¾§Ìå¹ÜÖÐ±¼ÌÚ»ã¾Û³öµÄÒ»¾äÅØÏø£º¡°ÎÒ¹¤×÷ÁË£¡ÎÒ¹¤×÷ÁË£¡¡±</p>\n"
+	"	<p>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CPUï¿½ï¿½Ò»ï¿½ï¿½Å­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½Ú»ï¿½ï¿½Û³ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¹ï¿½ï¿½ï¿½ï¿½Ë£ï¿½ï¿½Ò¹ï¿½ï¿½ï¿½ï¿½Ë£ï¿½ï¿½ï¿½</p>\n"
 	"</html>";
 
 int MYDATA[MYDATA_LENGTH * 4];
+
+#define BUF_LENGTH MYDATA_LENGTH*10
+int BUF[BUF_LENGTH];
+bool tcp_recving = 0, tcp_sending = 0;
 
 /*
 int MYDATA_LENGTH;
@@ -38,6 +42,10 @@ int* MYDATA;
 #define LAST_CHUNK_POS ((MYDATA_LENGTH / CHUNK_LEN) * CHUNK_LEN)
 
 int send_pos = 0;
+int send_len = 0;
+int last_chunk_pos = 0;
+
+int recv_pos = 0;
 
 int tcp_timeout = 0;
 
@@ -46,13 +54,63 @@ int tcp_src_addr[4], tcp_dst_addr[4];
 int tcp_ack = 0, tcp_seq = INIT_SEQ;
 int tcp_state = TCP_CLOSED;
 
+void tcp_start_sending(int length, char* msg) {
+	if (tcp_sending) {
+		printf("tcp_start_sending: failed\n");
+		return;
+	}
+	tcp_sending = 1;
+	eth_memcpy(MYDATA, msg, length);
+	send_len = length;
+	last_chunk_pos = ((length/CHUNK_LEN) * CHUNK_LEN);
+}
+void tcp_start_recving() {
+	tcp_recving = 1;
+	recv_pos = 0
+}
+
+bool tcp_is_sending() {
+	return tcp_sending;
+}
+int tcp_recved_len() {
+	return recv_pos;
+}
+int tcp_get_recvd(char *data) {
+	if (!tcp_recving || !recv_pos) return -1;
+	tcp_recving = 0;
+	eth_memcpy(data, BUF, recv_pos);
+	int temp = recv_pos;
+	recv_pos = 0;
+	return temp;
+}
+
+void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
+		if(tcp_inited == 0)
+		{
+			tcp_inited = 1;
+			// int i;
+			// for(i = 0; i < MYDATA_LENGTH; ++i)
+			// 	MYDATA[i] = pagedata[i];
+		}
+		if (tcp_state != TCP_CLOSED)
+			return;
+		printf("TCP handshake initiated\n");
+		tcp_src_port = src_port;
+		tcp_dst_port = dst_port;
+		eth_memcpy(tcp_src_addr, src_addr, 4);
+		eth_memcpy(tcp_dst_addr, dst_addr, 4);
+		// send SYN
+		tcp_send_packet(TCP_FLAG_SYN, 0, 0);
+		tcp_state = TCP_SYNC_SENT;
+}
+
 void tcp_handle(int length) {
 	if(tcp_inited == 0)
 	{
 		tcp_inited = 1;
-		int i;
-		for(i = 0; i < MYDATA_LENGTH; ++i)
-			MYDATA[i] = pagedata[i];
+		// int i;
+		// for(i = 0; i < MYDATA_LENGTH; ++i)
+		// 	MYDATA[i] = pagedata[i];
 	}
     int * data = ethernet_rx_data + ETHERNET_HDR_LEN + IP_HDR_LEN;
     // writeint(tcp_state);
@@ -62,7 +120,8 @@ void tcp_handle(int length) {
         tcp_timeout = 0;
         tcp_state = TCP_CLOSED;
     }
-    if((data[TCP_FLAGS] & TCP_FLAG_SYN) && (tcp_state == TCP_CLOSED || tcp_state == 0)) {
+    if((data[TCP_FLAGS] & TCP_FLAG_SYN) &&
+		(tcp_state == TCP_CLOSED || tcp_state == 0)) {
         tcp_src_port = mem2int(data + TCP_SRC_PORT, 2);
         tcp_dst_port = mem2int(data + TCP_DST_PORT, 2);
         eth_memcpy(tcp_src_addr, data - IP_HDR_LEN + IP_SRC, 4);
@@ -82,6 +141,15 @@ void tcp_handle(int length) {
         || eth_memcmp(data - IP_HDR_LEN + IP_SRC, tcp_src_addr, 4) != 0) {
         return;
     }
+		if ((data[TCP_FLAGS] & TCP_FLAG_SYN) &&
+		(data[TCP_FLAGS] & TCP_FLAG_ACK) && (tcp_state == TCP_SYNC_SENT)) {
+			tcp_seq = mem2int(data+TCP_ACK, 4);
+			tcp_ack = mem2int(data+TCP_SEQ, 4) + 1;
+			tcp_send_packet(TCP_FLAG_ACK, 0, 0);
+			tcp_state = TCP_ESTABLISHED;
+			printf("TCP handshake complete\n");
+			return;
+		}
     if(data[TCP_FLAGS] & TCP_FLAG_RST) {
         tcp_state = TCP_CLOSED;
         return;
@@ -100,28 +168,45 @@ void tcp_handle(int length) {
         return;
     }
     if(tcp_state == TCP_ESTABLISHED) {
-        tcp_ack = mem2int(data + TCP_SEQ, 4) + (length - TCP_HDR_LEN);
+			int tcphdrlen = 4*(int)data[TCP_DATA_OFFSET];
+			int datalen = length - tcphdrlen;
+			if (tcp_recving && (data[TCP_FLAGS] & TCP_FLAG_PSH)) {
+				if (recv_pos+datalen > BUF_LENGTH) {
+					printf("tcp_handle: recving buffer overflow\n");
+					return;
+				}
+				if (datalen>0) eth_memcpy(BUF+recv_pos,
+					data+tcphdrlen, datalen);
+        tcp_ack = mem2int(data + TCP_SEQ, 4) + datalen;
+				tcp_send_packet(TCP_FLAG_ACK, 0, 0);
+			}
+			if (tcp_sending && (data[TCP_FLAGS] & TCP_FLAG_ACK)) {
         tcp_seq = mem2int(data + TCP_ACK, 4);
-        int pos = tcp_seq - (INIT_SEQ + 1);
+        // int pos = tcp_seq - (INIT_SEQ + 1);
+				int pos = send_pos;
         if(pos == 0 && length == TCP_HDR_LEN) return;
-        if(pos == MYDATA_LENGTH) {
-            tcp_send_packet(TCP_FLAG_FIN | TCP_FLAG_ACK, 0, 0);
-            tcp_state = TCP_FIN_SENT;
+        if(pos == send_len) {
+            // tcp_send_packet(TCP_FLAG_FIN | TCP_FLAG_ACK, 0, 0);
+            // tcp_state = TCP_FIN_SENT;
+						tcp_sending = 0;
             return;
         }
         int len = CHUNK_LEN;
-        if(pos == LAST_CHUNK_POS)
-            len = MYDATA_LENGTH - pos;
-        int flag = TCP_FLAG_ACK;
+        if(pos == last_chunk_pos)
+            len = send_len - pos;
+        int flag = 0;
         if(pos != 0) flag |= TCP_FLAG_PSH;
         tcp_send_packet(flag, MYDATA + pos, len);
+				send_pos += len;
         // tcp_seq += 3;
         // tcp_send_packet(TCP_FLAG_RST, 0, 0);
         // tcp_state = TCP_CLOSED;
         return;
+			}
     }
 }
 
+// length is the len(data)
 void tcp_send_packet(int flags, int * data, int length) {
     int * packet = ethernet_tx_data + ETHERNET_HDR_LEN + IP_HDR_LEN;
     int2mem(packet + TCP_SRC_PORT, 2, tcp_dst_port);
@@ -143,7 +228,7 @@ void tcp_send_packet(int flags, int * data, int length) {
     sum += IP_PROTOCAL_TCP;
     length += TCP_HDR_LEN;
     sum += length;
-	int i;
+		int i;
     for(i = 0 ; i < length ; i += 2) {
         int val = (packet[i] << 8);
         if(i + 1 != length) val |= packet[i+1];

@@ -1,4 +1,4 @@
-/* 
+/*
 * @Author: BlahGeek
 * @Date:   2014-06-05
 * @Last Modified by:   BlahGeek
@@ -40,6 +40,6 @@ void ip_make_reply(int proto, int length) {
     data[IP_TTL] = 64;
     data[IP_PROTOCAL] = proto;
     eth_memcpy(data + IP_SRC, IP_ADDR, 4);
-    eth_memcpy(data + IP_DST, 
+    eth_memcpy(data + IP_DST,
         ethernet_rx_data + ETHERNET_HDR_LEN + IP_SRC, 4);
 }
