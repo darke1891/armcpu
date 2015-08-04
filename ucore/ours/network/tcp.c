@@ -4,7 +4,7 @@
 * @Last Modified by:   BlahGeek
 * @Last Modified time: 2014-06-09
 */
-
+#include "stdio.h"
 #include "tcp.h"
 #include "ethernet.h"
 #include "ip.h"
@@ -30,7 +30,7 @@ int MYDATA[MYDATA_LENGTH * 4];
 
 #define BUF_LENGTH MYDATA_LENGTH*10
 int BUF[BUF_LENGTH];
-bool tcp_recving = 0, tcp_sending = 0;
+int tcp_recving = 0, tcp_sending = 0;
 
 /*
 int MYDATA_LENGTH;
@@ -54,9 +54,9 @@ int tcp_src_addr[4], tcp_dst_addr[4];
 int tcp_ack = 0, tcp_seq = INIT_SEQ;
 int tcp_state = TCP_CLOSED;
 
-void tcp_start_sending(int length, char* msg) {
+void tcp_start_sending(int length, int* msg) {
 	if (tcp_sending) {
-		printf("tcp_start_sending: failed\n");
+		cprintf("tcp_start_sending: failed\n");
 		return;
 	}
 	tcp_sending = 1;
@@ -66,16 +66,16 @@ void tcp_start_sending(int length, char* msg) {
 }
 void tcp_start_recving() {
 	tcp_recving = 1;
-	recv_pos = 0
+	recv_pos = 0;
 }
 
-bool tcp_is_sending() {
+int tcp_is_sending() {
 	return tcp_sending;
 }
 int tcp_recved_len() {
 	return recv_pos;
 }
-int tcp_get_recvd(char *data) {
+int tcp_get_recvd(int *data) {
 	if (!tcp_recving || !recv_pos) return -1;
 	tcp_recving = 0;
 	eth_memcpy(data, BUF, recv_pos);
@@ -94,7 +94,7 @@ void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 		}
 		if (tcp_state != TCP_CLOSED)
 			return;
-		printf("TCP handshake initiated\n");
+		cprintf("TCP handshake initiated\n");
 		tcp_src_port = src_port;
 		tcp_dst_port = dst_port;
 		eth_memcpy(tcp_src_addr, src_addr, 4);
@@ -147,7 +147,7 @@ void tcp_handle(int length) {
 			tcp_ack = mem2int(data+TCP_SEQ, 4) + 1;
 			tcp_send_packet(TCP_FLAG_ACK, 0, 0);
 			tcp_state = TCP_ESTABLISHED;
-			printf("TCP handshake complete\n");
+			cprintf("TCP handshake complete\n");
 			return;
 		}
     if(data[TCP_FLAGS] & TCP_FLAG_RST) {
@@ -172,11 +172,12 @@ void tcp_handle(int length) {
 			int datalen = length - tcphdrlen;
 			if (tcp_recving && (data[TCP_FLAGS] & TCP_FLAG_PSH)) {
 				if (recv_pos+datalen > BUF_LENGTH) {
-					printf("tcp_handle: recving buffer overflow\n");
+					cprintf("tcp_handle: recving buffer overflow\n");
 					return;
 				}
 				if (datalen>0) eth_memcpy(BUF+recv_pos,
 					data+tcphdrlen, datalen);
+					cprintf("tcp_handle: recved: %s\n", BUF);
         tcp_ack = mem2int(data + TCP_SEQ, 4) + datalen;
 				tcp_send_packet(TCP_FLAG_ACK, 0, 0);
 			}

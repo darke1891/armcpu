@@ -11,6 +11,7 @@
 #include "utils.h"
 #include "arp.h"
 #include "ip.h"
+#include "tcp.h"
 
 int MAC_ADDR[6] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
 int ethernet_rx_data[2048];
@@ -241,10 +242,10 @@ void ethernet_set_tx(int * dst, int type) {
 
 void ethernet_intr()
 {
+  int src_port = 58888, dst_port = 51111,
+  src_addr[4] = {1, 1, 1, 1}, dst_addr[4] = {1, 1, 1, 1};
   tcp_handshake(src_port, dst_port, src_addr, dst_addr);
   tcp_start_recving();
-  int tcp_recved_len = 0;
-  char *tcp_recved_data[1000];
 	int no_pack = 0;
 	while(1)
 	{
@@ -268,12 +269,6 @@ void ethernet_intr()
 		    ip_handle();
         } else
 			cprintf("Unknow package type %d\n", type);
-
-      if (tcp_recved_len() > 0) {
-        tcp_recved_len = tcp_get_recvd(tcp_recved_data);
-        printf("tcp_recved_data: %s\n", tcp_recved_data);
-        break;
-      }
 	}
 }
 
