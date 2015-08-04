@@ -28,8 +28,9 @@ char* pagedata =
 
 int MYDATA[MYDATA_LENGTH * 4];
 
-#define BUF_LENGTH MYDATA_LENGTH*10
-int BUF[BUF_LENGTH];
+#define BUF_LENGTH MYDATA_LENGTH*4
+#define BUF MYDATA
+//int BUF[BUF_LENGTH];
 int tcp_recving = 0, tcp_sending = 0;
 
 /*
