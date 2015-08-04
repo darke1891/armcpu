@@ -22,7 +22,7 @@ int tcp_inited = 0;
 // hard code your http request here.
 #define MAX_HTTP_REQUEST_LEN (500/4)
 int http_r_len = 0;
-char* pagedata = "GET / HTTP/1.0\r\nHost: local_host\r\nUser-Agent: thu_mips\r\n\r\n";
+char* pagedata = "GET / HTTP/1.0\r\nHost: baidu.com\r\nUser-Agent: thu_mips\r\n\r\n";
 int http_request[MAX_HTTP_REQUEST_LEN];
 	// "<!DOCTYPE html>\n"
 	// "<html>\n"
@@ -66,6 +66,7 @@ void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 			for(http_r_len = 0; http_r_len < MAX_HTTP_REQUEST_LEN
 				&& pagedata[http_r_len] != '\0'; ++http_r_len)
 				http_request[http_r_len] = pagedata[http_r_len];
+				
 				http_request[http_r_len] = pagedata[http_r_len];
 		}
 		if (tcp_state != TCP_CLOSED)
