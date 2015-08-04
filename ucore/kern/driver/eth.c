@@ -4,7 +4,8 @@
  */
 
 #include <eth.h>
-
+#include <wait.h>
+#include <intr.h>
 
 static wait_queue_t __wait_queue, *wait_queue = &__wait_queue;
 

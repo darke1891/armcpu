@@ -123,10 +123,10 @@ void tcp_handle(int length) {
     }
     if((data[TCP_FLAGS] & TCP_FLAG_SYN) &&
 		(tcp_state == TCP_CLOSED || tcp_state == 0)) {
-        tcp_src_port = mem2int(data + TCP_SRC_PORT, 2);
-        tcp_dst_port = mem2int(data + TCP_DST_PORT, 2);
-        eth_memcpy(tcp_src_addr, data - IP_HDR_LEN + IP_SRC, 4);
-        eth_memcpy(tcp_dst_addr, data - IP_HDR_LEN + IP_DST, 4);
+        tcp_src_port = mem2int(data + TCP_DST_PORT, 2);
+        tcp_dst_port = mem2int(data + TCP_SRC_PORT, 2);
+        eth_memcpy(tcp_src_addr, data - IP_HDR_LEN + IP_DST, 4);
+        eth_memcpy(tcp_dst_addr, data - IP_HDR_LEN + IP_SRC, 4);
         tcp_ack = mem2int(data + TCP_SEQ, 4) + 1;
         tcp_seq = INIT_SEQ;
         tcp_state = TCP_SYNC_RECVED;
@@ -136,10 +136,10 @@ void tcp_handle(int length) {
         return;
     }
     // not closed, check port & addr
-    if(tcp_src_port != mem2int(data + TCP_SRC_PORT, 2)
-        || tcp_dst_port != mem2int(data + TCP_DST_PORT, 2)
-        || eth_memcmp(data - IP_HDR_LEN + IP_DST, tcp_dst_addr, 4) != 0
-        || eth_memcmp(data - IP_HDR_LEN + IP_SRC, tcp_src_addr, 4) != 0) {
+    if(tcp_src_port != mem2int(data + TCP_DST_PORT, 2)
+        || tcp_dst_port != mem2int(data + TCP_SRC_PORT, 2)
+        || eth_memcmp(data - IP_HDR_LEN + IP_DST, tcp_src_addr, 4) != 0
+        || eth_memcmp(data - IP_HDR_LEN + IP_SRC, tcp_dst_addr, 4) != 0) {
         return;
     }
 		if ((data[TCP_FLAGS] & TCP_FLAG_SYN) &&
@@ -169,8 +169,11 @@ void tcp_handle(int length) {
         return;
     }
     if(tcp_state == TCP_ESTABLISHED) {
-			int tcphdrlen = 4*(int)data[TCP_DATA_OFFSET];
+			int tcphdrlen = 4*(int)(data[TCP_DATA_OFFSET]>>4);
 			int datalen = length - tcphdrlen;
+
+			// cprintf("tcp: datalen: %d, tcphdrlen: %d", datalen, tcphdrlen);
+
 			if (tcp_recving && (data[TCP_FLAGS] & TCP_FLAG_PSH)) {
 				if (recv_pos+datalen > BUF_LENGTH) {
 					cprintf("tcp_handle: recving buffer overflow\n");
@@ -178,7 +181,9 @@ void tcp_handle(int length) {
 				}
 				if (datalen>0) eth_memcpy(BUF+recv_pos,
 					data+tcphdrlen, datalen);
-					cprintf("tcp_handle: recved: %s\n", BUF);
+					recv_pos += datalen;
+					for (int i = 0; i < datalen;++i)
+						cprintf("tcp_handle: recved: %c\n", (char)*(data+tcphdrlen+i));
         tcp_ack = mem2int(data + TCP_SEQ, 4) + datalen;
 				tcp_send_packet(TCP_FLAG_ACK, 0, 0);
 			}
@@ -211,8 +216,8 @@ void tcp_handle(int length) {
 // length is the len(data)
 void tcp_send_packet(int flags, int * data, int length) {
     int * packet = ethernet_tx_data + ETHERNET_HDR_LEN + IP_HDR_LEN;
-    int2mem(packet + TCP_SRC_PORT, 2, tcp_dst_port);
-    int2mem(packet + TCP_DST_PORT, 2, tcp_src_port);
+    int2mem(packet + TCP_SRC_PORT, 2, tcp_src_port);
+    int2mem(packet + TCP_DST_PORT, 2, tcp_dst_port);
     int2mem(packet + TCP_SEQ, 4, tcp_seq);
     int2mem(packet + TCP_ACK, 4, tcp_ack);
     packet[TCP_DATA_OFFSET] = 0x50;

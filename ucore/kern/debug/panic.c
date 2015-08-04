@@ -24,7 +24,14 @@ __panic(const char *file, int line, const char *fmt, ...) {
     kprintf("\n");
     va_end(ap);
 
+
 panic_dead:
+
+#ifdef DONT_PANIC
+    kprintf("dont panic, keep going\n");
+    return;
+#endif
+
     intr_disable();
     while (1) {
         monitor(NULL);
