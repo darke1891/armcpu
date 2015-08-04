@@ -162,3 +162,5 @@ user/spin.c
 user/testbss.c
 user/waitkill.c
 user/yield.c
+kern/driver/eth.c
+kern/driver/eth.h

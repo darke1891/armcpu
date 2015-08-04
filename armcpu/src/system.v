@@ -74,6 +74,7 @@ module system
 
 		.int_com_req(int_com_req),
 		.int_kbd_req(kbd_int),
+		.int_eth_req(eth_int),
 
 		.dev_mem_addr(mem_addr),
 		.dev_mem_data_in(data_from_mem),

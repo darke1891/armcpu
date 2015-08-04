@@ -10,6 +10,7 @@
 #include <sysfile.h>
 #include <fetchrun.h>
 #include <console.h>
+#include <eth.h>
 
 extern volatile int ticks;
 
@@ -181,6 +182,16 @@ sys_redraw_console(uint32_t arg[]) {
 	return 0;
 }
 
+
+static int
+sys_wait_eth_int(uint32_t arg[]) {
+    bool intr_flag;
+    local_intr_save(intr_flag);
+    wait_ethernet_int();
+    local_intr_restore(intr_flag);
+    return 0;
+}
+
 static int (*syscalls[])(uint32_t arg[]) = {
   [SYS_exit]              sys_exit,
   [SYS_fork]              sys_fork,
@@ -205,6 +216,7 @@ static int (*syscalls[])(uint32_t arg[]) = {
   [SYS_dup]               sys_dup,
   [SYS_fetchrun]          sys_fetchrun,
   [SYS_redraw_console]    sys_redraw_console,
+  [SYS_wait_eth_int]      sys_wait_eth_int,
 };
 
 #define NUM_SYSCALLS        ((sizeof(syscalls)) / (sizeof(syscalls[0])))
