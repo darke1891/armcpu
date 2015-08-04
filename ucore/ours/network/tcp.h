@@ -42,10 +42,5 @@ void tcp_send_packet(int flags, int * data, int length);
 
 void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr);
 
-void tcp_start_sending(int length, int* msg);
-void tcp_start_recving();
-int tcp_is_sending();
-int tcp_recved_len();
-int tcp_get_recvd(int *data);
 
 #endif
