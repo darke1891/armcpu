@@ -15,16 +15,16 @@
 #define INIT_SEQ 1001
 #define TIMEOUT 30
 
-#define MYDATA_LENGTH (724/4)
 
 int tcp_inited = 0;
 
-char* pagedata =
-	"<!DOCTYPE html>\n"
-	"<html>\n"
-	"	<h1>It works!</h1>\n"
-	"	<p>�������Լ�ԭ������ʵ����������CPU��һ��ŭ�����������ڵ������������������б��ڻ��۳���һ�����������ҹ����ˣ��ҹ����ˣ���</p>\n"
-	"</html>";
+#define MYDATA_LENGTH (724/4)
+char* pagedata = "http request here";
+	// "<!DOCTYPE html>\n"
+	// "<html>\n"
+	// "	<h1>It works!</h1>\n"
+	// "	<p>�������Լ�ԭ������ʵ����������CPU��һ��ŭ�����������ڵ������������������б��ڻ��۳���һ�����������ҹ����ˣ��ҹ����ˣ���</p>\n"
+	// "</html>";
 
 int MYDATA[MYDATA_LENGTH * 4];
 
@@ -55,35 +55,6 @@ int tcp_src_addr[4], tcp_dst_addr[4];
 int tcp_ack = 0, tcp_seq = INIT_SEQ;
 int tcp_state = TCP_CLOSED;
 
-void tcp_start_sending(int length, int* msg) {
-	if (tcp_sending) {
-		cprintf("tcp_start_sending: failed\n");
-		return;
-	}
-	tcp_sending = 1;
-	eth_memcpy(MYDATA, msg, length);
-	send_len = length;
-	last_chunk_pos = ((length/CHUNK_LEN) * CHUNK_LEN);
-}
-void tcp_start_recving() {
-	tcp_recving = 1;
-	recv_pos = 0;
-}
-
-int tcp_is_sending() {
-	return tcp_sending;
-}
-int tcp_recved_len() {
-	return recv_pos;
-}
-int tcp_get_recvd(int *data) {
-	if (!tcp_recving || !recv_pos) return -1;
-	tcp_recving = 0;
-	eth_memcpy(data, BUF, recv_pos);
-	int temp = recv_pos;
-	recv_pos = 0;
-	return temp;
-}
 
 void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 		if(tcp_inited == 0)

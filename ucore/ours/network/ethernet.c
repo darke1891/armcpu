@@ -138,7 +138,7 @@ void set_tx_addr(int addr) {
 	ethernet_write(DM9000_REG_TRPAH, (addr>>8) & 0xff);
 }
 
-void ethernet_send() {
+void ethernet_send2() {
 	ethernet_tx_data[ethernet_tx_len] = 0;
 	//print_tx_data();
 
@@ -181,7 +181,7 @@ void ethernet_send() {
 	cprintf("addr tx after : %04x\n", get_tx_addr());
 }
 
-void ethernet_send2() {
+void ethernet_send() {
     // int is char
     // A dummy write
     ethernet_write(DM9000_REG_MWCMDX, 0);
@@ -244,13 +244,12 @@ void ethernet_set_tx(int * dst, int type) {
 }
 
 void set_init_rx_data() {
-    eth_memcpy(ethernet_rx_src, R_MAC_ADDR, 6);
-    eth_memcpy(ethernet_rx_data + ETHERNET_HDR_LEN + IP_SRC, REMOTE_IP_ADDR, 4);
+    eth_memcpy(ethernet_tx_data + ETHERNET_DST_MAC, R_MAC_ADDR, 6);
+    eth_memcpy(ethernet_tx_data + ETHERNET_SRC_MAC, MAC_ADDR, 6);
 }
 
 void send_first_tcp_pack() {
     tcp_handshake(58888, 8888, IP_ADDR, REMOTE_IP_ADDR);
-    tcp_start_recving();
 }
 
 void ethernet_intr()
@@ -265,7 +264,7 @@ void ethernet_intr()
 			no_pack ++;
 			if ((no_pack & 0xff) == 0)
 				cprintf("No pack %d\n", no_pack);
-			if (no_pack > 10000) return;
+			if (no_pack > 100000) return;
 			delay_ms(1);
 			continue;
 		}
