@@ -248,6 +248,8 @@ void set_init_rx_data() {
     eth_memcpy(ethernet_rx_data + ETHERNET_HDR_LEN + IP_SRC, REMOTE_IP_ADDR, 4);
 }
 
+
+int remote_port;
 void send_first_tcp_pack() {
     tcp_handshake(58888, 8888, IP_ADDR, REMOTE_IP_ADDR);
 }
