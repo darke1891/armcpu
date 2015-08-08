@@ -7,6 +7,10 @@
 #ifndef __HEADER_SYSTEM__
 #define __HEADER_SYSTEM__
 
+#if __STDC_VERSION__ >= 199901L
+#define asm __asm
+#endif
+
 #include "ps2_code.h"
 #define CPU_FREQUENCY	12500000
 
@@ -119,6 +123,7 @@ static inline int syscall(int num, ...) {
 #define SYS_exit            1
 #define SYS_putc            30
 #define SYS_redraw_console		242
+#define SYS_wait_eth_int		243
 
 static inline void sys_exit(int error_code) __attribute__((noreturn));
 
@@ -132,7 +137,10 @@ static inline int sys_putc(int c) {
 }
 
 static inline void sys_redraw_console() {
-	syscall(SYS_redraw_console);
+    syscall(SYS_redraw_console);
+}
+static inline void sys_wait_eth_int() {
+    syscall(SYS_wait_eth_int);
 }
 
 static inline void puts(const char *str) {

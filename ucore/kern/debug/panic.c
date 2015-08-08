@@ -28,7 +28,7 @@ __panic(const char *file, int line, const char *fmt, ...) {
 panic_dead:
 
 #ifdef DONT_PANIC
-    kprintf("dont panic, keep going\n");
+    kprintf("don't panic, keep going\n");
     return;
 #endif
 

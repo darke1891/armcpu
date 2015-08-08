@@ -24,15 +24,12 @@ int ethernet_tx_len;
 
 unsigned int ethernet_read(unsigned int addr) {
     VPTR(ENET_IO_ADDR) = addr;
-    nop();nop();nop();
     return VPTR(ENET_DATA_ADDR);
 }
 
 void ethernet_write(unsigned int addr, unsigned int data) {
     VPTR(ENET_IO_ADDR) = addr;
-    nop();
     VPTR(ENET_DATA_ADDR) = data;
-    nop();
 }
 
 void ethernet_init() {
@@ -233,7 +230,7 @@ void ethernet_recv() {
         ethernet_rx_data[i+1] = MSB(data);
     }
     // clear intrrupt
-    ethernet_write(DM9000_REG_ISR, ISR_PR);
+    //ethernet_write(DM9000_REG_ISR, ISR_PR);
 }
 
 void ethernet_set_tx(int * dst, int type) {
@@ -264,8 +261,7 @@ void ethernet_intr()
 		ethernet_recv();
 		if(ethernet_rx_len == -1) {
 			no_pack ++;
-			if ((no_pack & 0xff) == 0)
-				cprintf("No pack %d\n", no_pack);
+			//if ((no_pack & 0xff) == 0) cprintf("No pack %d\n", no_pack);
 			if (no_pack > 10000) return;
 			delay_ms(1);
 			continue;
@@ -277,7 +273,7 @@ void ethernet_intr()
 		    arp_handle();
 		} else
 		if(type == ETHERNET_TYPE_IP) {
-			cprintf("handle ip\n");
+			//cprintf("handle ip\n");
 		    ip_handle();
         } else
 			cprintf("Unknow package type %d\n", type);
@@ -344,7 +340,10 @@ int main(int argc, char**argv) {
     for (int i=0; i<argc; i++)
         cprintf("argv[%d] : %s\n", i, argv[i]);
 
-	if (argc == 2 && argv[1][0] == 'r') {
+	if (argc >= 2 && argv[1][0] == 'r') {
+        extern char* pagedata;
+        if (argc >= 3) pagedata = argv[2];
+        else pagedata = 0;
 		print_device_info();
 		cprintf("Begin listen pack.....\n");
 		ethernet_intr();
