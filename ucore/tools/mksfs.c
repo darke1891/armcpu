@@ -579,4 +579,3 @@ main(int argc, char **argv) {
     printf("create %s (%s) successfully.\n", imgname, home);
     return 0;
 }
-

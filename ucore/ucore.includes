@@ -15,6 +15,7 @@ kern/sync
 kern/syscall
 kern/trap
 ours
+ours/network
 ours/snake
 user
 user/libs

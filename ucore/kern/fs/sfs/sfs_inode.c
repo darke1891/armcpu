@@ -476,7 +476,7 @@ sfs_io_nolock(struct sfs_fs *sfs, struct sfs_inode *sin, void *buf, off_t offset
     uint32_t nblks = endpos / SFS_BLKSIZE - blkno;
 
   //LAB8:EXERCISE1 2009010989 HINT: call sfs_bmap_load_nolock, sfs_rbuf, sfs_rblock,etc. read different kind of blocks in file
-    
+
     if((blkoff = offset % SFS_BLKSIZE)!= 0) {
         if(nblks){
           size = SFS_BLKSIZE - blkoff;
@@ -829,6 +829,49 @@ sfs_lookup(struct inode *node, char *path, struct inode **node_store) {
     return 0;
 }
 
+static int
+sfs_create(struct inode *node, const char *name, bool excl, struct inode **node_store) {
+//    cprintf("enter sfs_create\n");
+    struct sfs_fs *sfs = fsop_info(vop_fs(node), sfs);
+    struct sfs_inode *sin = vop_info(node, sfs_inode);
+    uint32_t ino = 0, inodin = 0;
+    int ret = 0;
+    // get inode no.
+    sfs_block_alloc(sfs, &inodin);
+    sfs_bmap_load_nolock(sfs, sin, sin->din->blocks, &ino);
+//    cprintf("sfs_create: %s\n", name);
+//    cprintf("ino: %d, inodin: %d\n:", ino, inodin);
+    struct sfs_disk_entry *entry;
+    if ((entry = kmalloc(sizeof(struct sfs_disk_entry))) == NULL) {
+        return -E_NO_MEM;
+    }
+    memset(entry, 0, sizeof(struct sfs_disk_entry));
+    entry->ino = inodin;
+    assert(strlen(name) <= SFS_MAX_FNAME_LEN);
+    memcpy(entry->name, name, strlen(name));
+
+    // write entry to disk
+    if ((ret = sfs_wbuf(sfs, entry, sizeof(struct sfs_disk_entry), ino, 0)) != 0) {
+        return ret;
+    }
+
+    // organise a din and write it to the disk inodin
+    struct sfs_disk_inode *din;
+    if ((din = kmalloc(sizeof(struct sfs_disk_inode))) == NULL) {
+        return -E_NO_MEM;
+    }
+    memset(din, 0, sizeof(struct sfs_disk_inode));
+    din->__type__ = SFS_TYPE_FILE;
+    din->__nlinks__ = 1;
+    if ((ret = sfs_wbuf(sfs, din, sizeof(struct sfs_disk_inode), inodin, 0)) != 0) {
+        return ret;
+    }
+//    sfs_dirent_search_nolock(sfs, sin, name, NULL, NULL, NULL);
+//    sfs_lookup(node, name, NULL);
+    return sfs_load_inode(sfs, node_store, inodin);
+}
+
+// The sfs specific DIR operations correspond to the abstract operations on a inode.
 static const struct inode_ops sfs_node_dirops = {
     .vop_magic                      = VOP_MAGIC,
     .vop_open                       = sfs_opendir,
@@ -840,6 +883,7 @@ static const struct inode_ops sfs_node_dirops = {
     .vop_reclaim                    = sfs_reclaim,
     .vop_gettype                    = sfs_gettype,
     .vop_lookup                     = sfs_lookup,
+    .vop_create                     = sfs_create,
 };
 
 static const struct inode_ops sfs_node_fileops = {
@@ -855,4 +899,3 @@ static const struct inode_ops sfs_node_fileops = {
     .vop_tryseek                    = sfs_tryseek,
     .vop_truncate                   = sfs_truncfile,
 };
-
