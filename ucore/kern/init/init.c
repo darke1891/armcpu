@@ -12,6 +12,7 @@
 #include <proc.h>
 #include <thumips_tlb.h>
 #include <sched.h>
+#include <eth.h>
 
 void setup_exception_vector()
 {
@@ -63,6 +64,8 @@ kern_init(void) {
 
     ide_init();
     fs_init();
+
+    ethernet_init();
 
     intr_enable();              // enable irq interrupt
     //*(int*)(0x00124) = 0x432;

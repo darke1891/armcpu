@@ -11,6 +11,7 @@
 
 #define printf(...)                     fprintf(1, __VA_ARGS__)
 #define BUFSIZE                         4096
+#define min(a,b)                        (((a)<(b))?(a):(b))
 
 int
 getstat(const char *name, struct stat *stat) {
@@ -34,29 +35,27 @@ main(int argc, char **argv) {
 
     if (argc>2)
         fd2 = open(argv[2], O_RDONLY);
+//    cprintf("fd1: %d, fd2: %d\n");
 
 //    read(int fd, void *base, size_t len);
 
-    if (argc>2 && fd2 > 0 && fd1 > 0) {
+    if (argc>2 && fd2 >= 0 && fd1 >= 0) {
         struct stat __stat, *stat = &__stat;
         int ret;
         if ((ret = getstat(argv[2], stat)) != 0) {
             return ret;
         }
-        int copylen = stat->st_size;
         char buf[BUFSIZE+1];
-        int copyn = copylen / BUFSIZE, lastlen = copylen % BUFSIZE, i = 0;
-        for (; i < copyn; ++i) {
-            memset(buf, 0, BUFSIZE);
-            read(fd2, buf, BUFSIZE);
-            write(fd1, buf, BUFSIZE);
-        }
-        if (lastlen) {
-            memset(buf, 0, lastlen);
-            read(fd2, buf, lastlen);
-            write(fd1, buf, lastlen);
+        int remainlen = stat->st_size;
+//        printf("src file size: %d bytes\n", remainlen);
+
+        while(0 < remainlen) {
+            memset(buf, 0, BUFSIZE+1);
+            int copylen = min(BUFSIZE, remainlen);
+            read(fd2, buf, copylen);
+            write(fd1, buf, copylen);
+            remainlen -= copylen;
         }
     }
-//    dup2(fd2, fd1);
     return 0;
 }

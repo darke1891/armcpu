@@ -861,8 +861,11 @@ sfs_create(struct inode *node, const char *name, bool excl, struct inode **node_
         return -E_NO_MEM;
     }
     memset(din, 0, sizeof(struct sfs_disk_inode));
-    din->__type__ = SFS_TYPE_FILE;
-    din->__nlinks__ = 1;
+    int type_links = (SFS_TYPE_FILE << 16) | 1;
+    uint32_t *t = (uint32_t*)&((din)->__type__);
+    memcpy(t, &type_links, 4);
+//    din->__type__ |= SFS_TYPE_FILE;
+//    din->__nlinks__ |= 1;
     if ((ret = sfs_wbuf(sfs, din, sizeof(struct sfs_disk_inode), inodin, 0)) != 0) {
         return ret;
     }

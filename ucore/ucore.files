@@ -183,3 +183,6 @@ user/spin.c
 user/testbss.c
 user/waitkill.c
 user/yield.c
+user/testfile.c
+user/testfile.c
+ours/test_eth_wait.c

@@ -334,7 +334,7 @@ int from_hex(char *s) {
 }
 
 int main(int argc, char**argv) {
-	((int*)SEG_ADDR)[0] = 0xab;
+    ((int*)SEG_ADDR)[0] = 0xab;
 
     cprintf("argc : %d\n", argc);
     for (int i=0; i<argc; i++)

@@ -22,7 +22,7 @@ GDB		:= $(GCCPREFIX)gdb
 THUMIPSCC		:= ./thumips-cc
 CLANG := clang
 CC :=$(GCCPREFIX)gcc
-CFLAGS	:=  -fno-builtin -nostdlib  -nostdinc -g  -EL -G0 -Wformat -O2 -mno-float -DDONT_PANIC
+CFLAGS	:=  -fno-builtin -nostdlib  -nostdinc -g  -EL -G0 -Wformat -O2 -mno-float# -DDONT_PANIC
 CTYPE	:= c S
 
 LD      := $(GCCPREFIX)ld
@@ -66,12 +66,12 @@ INCLUDES  := $(addprefix -I,$(SRC_DIR))
 INCLUDES  += -I$(SRCDIR)/include
 
 ifeq  ($(ON_FPGA), y)
-USER_APPLIST:= sh ls cat run
+USER_APPLIST:= sh ls cat run testfile
 INITRD_BLOCK_CNT:=1500
 FPGA_LD_FLAGS += -S
 MACH_DEF := -DMACH_FPGA
 else
-USER_APPLIST:= pwd cat sh ls fork yield hello faultreadkernel faultread badarg waitkill pgdir exit sleep prime run head
+	USER_APPLIST:= pwd cat sh ls fork yield hello faultreadkernel faultread badarg waitkill pgdir exit sleep prime run head
 # 2M
 INITRD_BLOCK_CNT:=4000
 MACH_DEF := -DMACH_QEMU

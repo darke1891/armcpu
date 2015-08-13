@@ -15,3 +15,4 @@
 
 void ethernet_int_handler();
 void wait_ethernet_int();
+void ethernet_init();
