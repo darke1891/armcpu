@@ -10,7 +10,6 @@
 #include "ip.h"
 #include "defs.h"
 #include "utils.h"
-#include "opengl.h"
 
 #define WINDOW_SIZE 1000
 #define INIT_SEQ 1001
@@ -134,6 +133,12 @@ void tcp_handle(int length) {
         || eth_memcmp(data - IP_HDR_LEN + IP_SRC, tcp_dst_addr, 4) != 0) {
         return;
     }
+    if(tcp_state == TCP_FIN_RECV) {
+        tcp_state = TCP_CLOSED;
+        extern int __timeout;
+        __timeout = 0;
+        cprintf("TCP_CLOSED\n");
+    }
 		if ((data[TCP_FLAGS] & TCP_FLAG_SYN) &&
 		(data[TCP_FLAGS] & TCP_FLAG_ACK) && (tcp_state == TCP_SYNC_SENT)) {
 			tcp_seq = mem2int(data+TCP_ACK, 4);
@@ -209,10 +214,7 @@ void tcp_handle(int length) {
 				if (data[TCP_FLAGS] & TCP_FLAG_FIN) {
 					tcp_ack +=  1;
 					tcp_send_packet(TCP_FLAG_ACK | TCP_FLAG_FIN, 0, 0);
-					tcp_state = TCP_CLOSED;
-                    extern int __timeout;
-                    __timeout = 0;
-                    cprintf("TCP_CLOSED\n");
+                    tcp_state = TCP_FIN_RECV;
 				} else {
 					tcp_send_packet(TCP_FLAG_ACK, 0, 0);
 				}

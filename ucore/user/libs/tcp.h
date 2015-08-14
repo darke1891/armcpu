@@ -7,6 +7,7 @@
 #define TCP_FIN_SENT 4
 #define TCP_SYNC_SENT 5
 #define TCP_SYNACK_RECVED 6
+#define TCP_FIN_RECV 7
 
 extern int tcp_src_port, tcp_dst_port;
 extern int tcp_src_addr[4], tcp_dst_addr[4];

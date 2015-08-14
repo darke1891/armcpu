@@ -66,7 +66,7 @@ INCLUDES  := $(addprefix -I,$(SRC_DIR))
 INCLUDES  += -I$(SRCDIR)/include
 
 ifeq  ($(ON_FPGA), y)
-USER_APPLIST:= sh ls cat run wget server testfile
+USER_APPLIST:= sh ls cat run wget server testfile wgetimg
 #INITRD_BLOCK_CNT:=1500
 INITRD_BLOCK_CNT:=3000
 FPGA_LD_FLAGS += -S
