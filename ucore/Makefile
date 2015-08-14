@@ -22,7 +22,7 @@ GDB		:= $(GCCPREFIX)gdb
 THUMIPSCC		:= ./thumips-cc
 CLANG := clang
 CC :=$(GCCPREFIX)gcc
-CFLAGS	:=  -fno-builtin -nostdlib  -nostdinc -g  -EL -G0 -Wformat -O2 -mno-float# -DDONT_PANIC
+CFLAGS	:=  -fno-builtin -nostdlib  -nostdinc -g  -EL -G0 -Wformat -O2 -mno-float -D__DEBUG # -DDONT_PANIC
 CTYPE	:= c S
 
 LD      := $(GCCPREFIX)ld
@@ -66,9 +66,9 @@ INCLUDES  := $(addprefix -I,$(SRC_DIR))
 INCLUDES  += -I$(SRCDIR)/include
 
 ifeq  ($(ON_FPGA), y)
-USER_APPLIST:= sh ls cat run wget
+USER_APPLIST:= sh ls cat run wget server testfile
 #INITRD_BLOCK_CNT:=1500
-INITRD_BLOCK_CNT:=1500
+INITRD_BLOCK_CNT:=3000
 FPGA_LD_FLAGS += -S
 MACH_DEF := -DMACH_FPGA
 else

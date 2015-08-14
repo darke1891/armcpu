@@ -251,7 +251,9 @@ void send_first_tcp_pack() {
     tcp_handshake(58888, 8888, IP_ADDR, REMOTE_IP_ADDR);
 }
 
+volatile int __timeout;
 void server(int timeout) {
+    __timeout = timeout;
     int no_pack = 0;
     while(1)
     {
@@ -259,7 +261,7 @@ void server(int timeout) {
         if(ethernet_rx_len == -1) {
             no_pack ++;
             //if ((no_pack & 0xff) == 0) cprintf("No pack %d\n", no_pack);
-            if (no_pack > timeout) return;
+            if (no_pack > __timeout) return;
             delay_ms(1);
             continue;
         }
@@ -275,6 +277,13 @@ void server(int timeout) {
         } else
             cprintf("Unknow package type %d\n", type);
     }
+}
+
+void set_eth_int(int open) {
+    if (open)
+        ethernet_write(DM9000_REG_IMR, IMR_PAR | IMR_PRI);
+    else
+        ethernet_write(DM9000_REG_IMR, IMR_PAR);
 }
 
 void tcp_send(char *cmd, int (*callback)(int *, int), int timeout) {

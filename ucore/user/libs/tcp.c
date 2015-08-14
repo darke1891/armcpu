@@ -41,7 +41,6 @@ int tcp_inited = 0;
 // hard code your http request here.
 #define MAX_HTTP_REQUEST_LEN (500/4)
 int http_r_len = 0;
-char* pagedata = 0;
 int http_request[MAX_HTTP_REQUEST_LEN];
 
 int MYDATA[MYDATA_LENGTH * 4];
@@ -68,7 +67,8 @@ int tcp_src_addr[4], tcp_dst_addr[4];
 int tcp_ack = 0, tcp_seq = INIT_SEQ;
 int tcp_state = TCP_CLOSED;
 
-int (*tcp_callback)(int *, int) = NULL;
+volatile int (*tcp_callback)(int *, int) = NULL;
+volatile char* pagedata = 0;
 
 void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 		if(tcp_inited == 0)
@@ -86,6 +86,7 @@ void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
             data_push_back(pagedata);
 			http_request[http_r_len] = '\0';
 		}
+
 		if (tcp_state != TCP_CLOSED)
 			return;
 		cprintf("TCP handshake initiated\n");
@@ -142,6 +143,7 @@ void tcp_handle(int length) {
 			tcp_state = TCP_ESTABLISHED;
 			cprintf("TCP handshake complete\n");
 			// send out http request
+            cprintf("tcp_handle send msg: %s, len: %d\n", http_request, http_r_len);
 			tcp_send_packet(TCP_FLAG_PSH|TCP_FLAG_ACK, http_request, http_r_len);
 			tcp_seq += http_r_len;
 			tcp_recving = 1;
@@ -184,9 +186,9 @@ void tcp_handle(int length) {
 			// in order pkt
 			tcp_ack += datalen;
 			recv_len += datalen;
-			if ((recv_len & 0xffff) == 0)
-				;//cprintf("recved total length: %d bytes\n", recv_len);
-			// cprintf("tcp: datalen: %d, tcphdrlen: %d", datalen, tcphdrlen);
+//			if ((recv_len & 0xffff) == 0)
+//            cprintf("recved total length: %d bytes\n", recv_len);
+//            cprintf("tcp: datalen: %d, tcphdrlen: %d\n", datalen, tcphdrlen);
 
             if (tcp_verbose)
                 cprintf("get len %d", datalen);
@@ -208,6 +210,9 @@ void tcp_handle(int length) {
 					tcp_ack +=  1;
 					tcp_send_packet(TCP_FLAG_ACK | TCP_FLAG_FIN, 0, 0);
 					tcp_state = TCP_CLOSED;
+                    extern int __timeout;
+                    __timeout = 0;
+                    cprintf("TCP_CLOSED\n");
 				} else {
 					tcp_send_packet(TCP_FLAG_ACK, 0, 0);
 				}

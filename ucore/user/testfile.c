@@ -57,5 +57,7 @@ main(int argc, char **argv) {
             remainlen -= copylen;
         }
     }
+    close(fd1);
+    close(fd2);
     return 0;
 }

@@ -6,8 +6,9 @@ echo "file size : $size"
 
 tmp_file=/tmp/flash_check
 
-./controller.py flash erase 0 $[$size*2]
+./controller.py flash erase 0 $size
 ./controller.py flash write 0 $name
-./controller.py flash read 0 $size $tmp_file
-
-diff $name $tmp_file
+if [ -z $DONT_CHECK ]; then
+    ./controller.py flash read 0 $size $tmp_file
+    ./mydiff.py $name $tmp_file
+fi
