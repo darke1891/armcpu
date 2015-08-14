@@ -151,7 +151,6 @@ void ethernet_init() {
         // initialize hash table
         for(i = 0 ; i < 8 ; i += 1)
             ethernet_write(DM9000_REG_MAR0 + i, 0x00);
-        kprintf(".");
         // accept broadcast
         ethernet_write(DM9000_REG_MAR7, 0x80);
         // enable pointer auto return function
@@ -169,6 +168,6 @@ void ethernet_init() {
         // enable checksum calc
         ethernet_write(DM9000_REG_TCSCR,
             TCSCR_IPCSE);
-        kprintf("Done\n");
+        kprintf("Network initializing Done\n");
         //!pic_enable(IRQ_ETH);
 }

@@ -6,6 +6,7 @@
 #include <stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <utils.h>
 
 #define PROG_FILE_NAME "myfile"
 
@@ -26,6 +27,7 @@ getstat(const char *name, struct stat *stat) {
 
 int
 main(int argc, char **argv) {
+//    cprintf("test rand %d\n", rand());
     cprintf("Usage: %s dst_file src_file(must exists)\n", argv[0]);
     int fd1 = -1, fd2 = -1;
     if (argc>1)

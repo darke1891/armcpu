@@ -73,6 +73,7 @@ void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 		if(tcp_inited == 0)
 		{
             tcp_inited = 1;
+            tcp_seq = (rand() & 0xfff);
 			http_r_len = 0;
 			int i=0;
 			#define data_push_back(ss) \
@@ -89,7 +90,7 @@ void tcp_handshake(int src_port, int dst_port, int *src_addr, int *dst_addr) {
 		if (tcp_state != TCP_CLOSED)
 			return;
 		cprintf("TCP handshake initiated\n");
-		tcp_src_port = src_port;
+        tcp_src_port = 50000+(rand() & 0xfff);
 		tcp_dst_port = dst_port;
 		eth_memcpy(tcp_src_addr, src_addr, 4);
 		eth_memcpy(tcp_dst_addr, dst_addr, 4);
@@ -119,7 +120,7 @@ void tcp_handle(int length) {
         eth_memcpy(tcp_src_addr, data - IP_HDR_LEN + IP_DST, 4);
         eth_memcpy(tcp_dst_addr, data - IP_HDR_LEN + IP_SRC, 4);
         tcp_ack = mem2int(data + TCP_SEQ, 4) + 1;
-        tcp_seq = INIT_SEQ;
+//        tcp_seq = INIT_SEQ;
         tcp_state = TCP_SYNC_RECVED;
         send_pos = 0;
         tcp_send_packet(TCP_FLAG_SYN | TCP_FLAG_ACK,

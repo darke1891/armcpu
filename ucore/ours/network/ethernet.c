@@ -22,6 +22,11 @@ int ethernet_tx_data[2048];
 int ethernet_tx_len;
 
 
+void set_remote_mac(int r_mac_addr[6]) {
+    int i;
+    for (i=0; i<6; i++) R_MAC_ADDR[i] = r_mac_addr[i];
+}
+
 unsigned int ethernet_read(unsigned int addr) {
     VPTR(ENET_IO_ADDR) = addr;
     return VPTR(ENET_DATA_ADDR);

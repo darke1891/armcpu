@@ -56,3 +56,15 @@ void int2mem(int * data, int length, int val) {
         val >>= 8;
     }
 }
+
+uint32_t rand() {
+    // see wiki,  multiply-with-carry by George Marsaglia
+    static uint32_t m_z, m_w;
+    if (!m_z || !m_w) {
+        m_z = read_c0_count();
+        m_w = ~read_c0_count();
+    }
+    m_z = 36969 * (m_z & 65535) + (m_z >> 16);
+    m_w = 18000 * (m_w & 65535) + (m_w >> 16);
+    return (m_z << 16) + m_w;  /* 32-bit result */
+}
