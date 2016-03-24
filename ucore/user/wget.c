@@ -31,8 +31,8 @@ int tcp_get(int *data, int len) {
         tcp_buf[i] = (char)(data[i]);
     }
 //    tcp_buf[len] = '\0';
-    if (print_info) cprintf("%s", tcp_buf);
-    write(fd1, tcp_buf, len);
+    cprintf("%s", tcp_buf);
+//    write(fd1, tcp_buf, len);
     call_recv_len += len;
 }
 
@@ -45,11 +45,11 @@ main(int argc, char **argv) {
         return 0;
     }
     print_info = (argc==2);
-    fd1 = open(argv[1], O_CREAT|O_RDWR);
-    if (fd1 < 0) {
-        cprintf("open file %s error", argv[1]);
-        return -1;
-    }
+//    fd1 = open(argv[1], O_CREAT|O_RDWR);
+//    if (fd1 < 0) {
+//        cprintf("open file %s error", argv[1]);
+//        return -1;
+//    }
 //    memset(http_request, 0, MAX_HTTP_REQUEST_LEN);
     char *prefix = "GET /";
     char *suffix = "\r\n\r\n";
@@ -72,7 +72,7 @@ main(int argc, char **argv) {
 
     tcp_send(url, tcp_get, 100000);
     cprintf("call_recv_len: %d\n", call_recv_len);
-    close(fd1);
+//    close(fd1);
 
     return 0;
 }
