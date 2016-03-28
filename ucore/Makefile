@@ -140,6 +140,8 @@ clean:
 	-rm -rf $(BUILD_DIR)
 	-rm -rf $(DEPDIR)
 	-rm -rf boot/loader.o boot/loader boot/loader.bin
+	-rm -rf $(OBJDIR)/ucore-kernel-initrd
+	-rm -rf $(TOOL_MKSFS)
 
 
 ifneq ($(MAKECMDGOALS),clean)
