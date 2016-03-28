@@ -33,9 +33,11 @@
 `define RAM_WRITE_WIDTH	1	// width of write signal
 `define RAM_WRITE_READ_RECOVERY 1	// recovery time before next read after write
 
-`define ETH_WRITE_WIDTH	4
-`define ETH_WRITE_BEGIN	1
-`define ETH_WRITE_READ_RECOVERY 2
+`define ETH_WRITE_WIDTH	2
+`define ETH_WRITE_BEGIN	0
+`define ETH_READ_WIDTH 2
+`define ETH_READ_BEGIN 0
+`define ETH_WRITE_READ_RECOVERY 4
 
 `define FLASH_WRITE_WIDTH 4
 `define FLASH_WRITE_READ_RECOVERY 2
@@ -213,8 +215,22 @@ module phy_mem_ctrl(
 	//assign eth_cmd = write_addr_latch == `ETH_DATA_ADDR;
 	assign eth_cmd = (state != WRITE_ETH && opt_is_lw)? addr_is_eth_data : (write_addr_latch == `ETH_DATA_ADDR);
 	assign eth_ior = ~(state == READ && addr_is_eth && opt_is_lw);
-	assign eth_iow = ~(state == WRITE_ETH && 
-            (write_cnt < `ETH_WRITE_WIDTH && write_cnt >= `ETH_WRITE_BEGIN));
+//	assign eth_iow = ~(state == WRITE_ETH && 
+//            (write_cnt < `ETH_WRITE_WIDTH && write_cnt >= `ETH_WRITE_BEGIN));
+	reg eth_iow_inside;
+	assign eth_iow = eth_iow_inside;
+	always @(negedge clk50M) begin
+		if (rst) begin
+			eth_iow_inside <= 1;
+//			eth_ior_inside <= 1;
+			end
+		else begin
+			eth_iow_inside <= ~(state == WRITE_ETH && 
+							(write_cnt < `ETH_WRITE_WIDTH && write_cnt >= `ETH_WRITE_BEGIN));
+//			eth_ior_inside <= ~(state == READ_ETH && 
+//							(write_cnt < `ETH_READ_WIDTH && write_cnt >= `ETH_READ_BEGIN));
+			end
+	end
 
 	// assign int ack
 	always @(negedge clk50M) begin
