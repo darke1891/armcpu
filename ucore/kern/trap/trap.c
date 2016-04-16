@@ -115,7 +115,7 @@ static void interrupt_handler(struct trapframe *tf)
           keyboard_int_handler();
           break;
         case ETH_IRQ:
-          //kprintf("KEYBOARD\n");
+//          kprintf("ETH_IRQ\n");
           ethernet_int_handler();
           break;
         default:

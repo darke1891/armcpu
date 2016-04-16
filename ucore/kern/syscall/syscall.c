@@ -10,7 +10,7 @@
 #include <sysfile.h>
 #include <fetchrun.h>
 #include <console.h>
-#include <eth.h>
+#include <ethernet.h>
 
 extern volatile int ticks;
 

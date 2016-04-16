@@ -12,7 +12,7 @@
 #include <proc.h>
 #include <thumips_tlb.h>
 #include <sched.h>
-#include <eth.h>
+#include <ethernet.h>
 
 void setup_exception_vector()
 {

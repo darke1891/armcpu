@@ -66,13 +66,13 @@ INCLUDES  := $(addprefix -I,$(SRC_DIR))
 INCLUDES  += -I$(SRCDIR)/include
 
 ifeq  ($(ON_FPGA), y)
-USER_APPLIST:= sh ls cat run wget server testfile
+USER_APPLIST:= sh ls cat run wget server prime forktree yield
 #INITRD_BLOCK_CNT:=1500
 INITRD_BLOCK_CNT:=3000
 FPGA_LD_FLAGS += -S
 MACH_DEF := -DMACH_FPGA
 else
-	USER_APPLIST:= pwd cat sh ls fork yield hello faultreadkernel faultread badarg waitkill pgdir exit sleep prime run head
+USER_APPLIST:= pwd cat sh ls fork yield hello faultreadkernel faultread badarg waitkill pgdir exit sleep prime run head
 # 2M
 INITRD_BLOCK_CNT:=4000
 MACH_DEF := -DMACH_QEMU
@@ -180,8 +180,6 @@ $(TOOL_MKSFS): tools/mksfs.c
 	$(HOSTCC) $(HOSTCFLAGS) -o $@ $^
 
 $(OBJDIR)/ucore-kernel-initrd: gen_tag $(BUILD_DIR) $(TOOL_MKSFS) $(OBJ) $(USER_APP_BINS) tools/kernel.ld
-	make -C ours/snake
-	make -C ours/slideshow
 	rm -rf $(ROOTFS_DIR) $(ROOTFS_IMG)
 	mkdir $(ROOTFS_DIR)
 	cp $(USER_APP_BINS) $(ROOTFS_DIR)
@@ -194,7 +192,6 @@ $(OBJDIR)/ucore-kernel-initrd: gen_tag $(BUILD_DIR) $(TOOL_MKSFS) $(OBJ) $(USER_
 	@echo LINK $@
 	$(LD) $(FPGA_LD_FLAGS) -nostdlib -n -G 0 -static -T tools/kernel.ld $(OBJ) \
 				 $(USER_OBJDIR)/initrd.img.o -o $@
-	rm -rf $(ROOTFS_DIR)
 
 boot/loader.bin: boot/bootasm.S
 	$(CC) $(CFLAGS) -g -c -o boot/loader.o $^

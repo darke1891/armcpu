@@ -1,11 +1,13 @@
-#ifndef _H_ETHERNET
-#define _H_ETHERNET value
+#ifndef _KERN_DRIVER_DM9000AEP_H_
+#define _KERN_DRIVER_DM9000AEP_H_
 
 
 #define VPTR(x) (*(unsigned volatile int *)x)
 
 #define ENET_IO_ADDR 0xBFD003E0
 #define ENET_DATA_ADDR 0xBFD003E4
+
+#define SEG_ADDR 0xBFD00400
 
 //DM9000 identifiers
 #define DM9000_VID             0x0A46
