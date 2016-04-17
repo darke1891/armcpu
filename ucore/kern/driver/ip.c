@@ -3,6 +3,7 @@
 #include <icmp.h>
 #include <eth_utils.h>
 #include <defs.h>
+#include <tcp.h>
 
 int IP_ADDR[4] = {192, 168, 2, 2};
 int REMOTE_IP_ADDR[4] = {192, 168, 2, 1};
@@ -19,8 +20,8 @@ void ip_handle() {
 
     if(data[IP_PROTOCAL] == IP_PROTOCAL_ICMP)
         icmp_handle(length);
-//    if(data[IP_PROTOCAL] == IP_PROTOCAL_TCP)
-//        tcp_handle(length);
+    if(data[IP_PROTOCAL] == IP_PROTOCAL_TCP)
+        tcp_handle(length);
 }
 
 void ip_send(int proto, int length) {

@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <syscall.h>
+#include <new_tcp.h>
 
 #define MAX_ARGS            4
 #define SYSCALL_BASE        0x80
@@ -156,8 +157,22 @@ sys_redraw_console() {
 	syscall(SYS_redraw_console);
 }
 
+int sys_socket() {
+  return syscall(SYS_eth, TCP_SYS_SOCKET);
+}
 
-void
-sys_wait_eth_int() {
-    syscall(SYS_wait_eth_int);
+int sys_bind(int sockfd, int* ip, int port) {
+  return syscall(SYS_eth, TCP_SYS_BIND, sockfd, ip, port);
+}
+
+int sys_connect(int sockfd, int* ip, int port) {
+  return syscall(SYS_eth, TCP_SYS_CONNECT, sockfd, ip, port);
+}
+
+int sys_listen(int sockfd) {
+  return syscall(SYS_eth, TCP_SYS_LISTEN, sockfd);
+}
+
+int sys_send(int sockfd, char* data, int len) {
+  return syscall(SYS_eth, TCP_SYS_SEND, sockfd, data, len);
 }

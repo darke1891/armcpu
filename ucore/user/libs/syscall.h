@@ -34,9 +34,14 @@ int sys_fetchrun(int fd, const char *fpath); // read from serial bus and write t
 void sys_redraw_console();	// redraw system console
 void sys_set_cons_sync_vga(int flag);
 
-void sys_wait_eth_int();
-
 void sys_lab6_set_priority(uint32_t priority); //only for lab6
+
+int sys_socket();
+int sys_bind(int sockfd, int* ip, int port);
+int sys_connect(int sockfd, int* ip, int port);
+int sys_listen(int sockfd);
+int sys_send(int sockfd, char* data, int len);
+
 
 
 #endif /* !__USER_LIBS_SYSCALL_H__ */

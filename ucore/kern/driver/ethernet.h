@@ -13,8 +13,10 @@
 #include <string.h>
 #include <picirq.h>
 #include <trap.h>
+#include <wait.h>
 
 extern int MAC_ADDR[6];
+extern int R_MAC_ADDR[6];
 extern int ethernet_rx_data[2048];
 extern int ethernet_rx_len;
 extern int ethernet_tx_data[2048];
@@ -33,7 +35,7 @@ extern int ethernet_tx_len;
 
 void ethernet_int_handler();
 void wait_ethernet_int();
-
+void wakeup_ethernet();
 
 unsigned int ethernet_read(unsigned int addr);
 void ethernet_write(unsigned int addr, unsigned int data);

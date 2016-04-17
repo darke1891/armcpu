@@ -11,6 +11,8 @@
 #include <fetchrun.h>
 #include <console.h>
 #include <ethernet.h>
+#include <tcp.h>
+#include <ip.h>
 
 extern volatile int ticks;
 
@@ -175,21 +177,58 @@ sys_fetchrun(uint32_t arg[]) {
 
 static int
 sys_redraw_console(uint32_t arg[]) {
-    bool intr_flag;
-    local_intr_save(intr_flag);
+  bool intr_flag;
+  local_intr_save(intr_flag);
 	vga_redraw();
-    local_intr_restore(intr_flag);
+  local_intr_restore(intr_flag);
 	return 0;
 }
 
 
 static int
-sys_wait_eth_int(uint32_t arg[]) {
-    bool intr_flag;
-    local_intr_save(intr_flag);
-    wait_ethernet_int();
-    local_intr_restore(intr_flag);
-    return 0;
+sys_eth(uint32_t arg[]) {
+/*
+  const char *message = (const char *)arg[0];
+  int len = (int)arg[1];
+  int i;
+  kprintf("Prepare to send %s, len : %d\n", message, len);
+  tcp_buffer_len = len;
+  for (i=0;i<len;i++)
+    tcp_send_buffer[i] = message[i];
+  tcp_send_buffer[len] = '\0';
+  tcp_handshake(8888, IP_ADDR, REMOTE_IP_ADDR);
+*/
+  int type = (int) arg[0];
+  int sockfd = (int) arg[1];
+  int res = 0;
+  int *ip;
+  int port;
+  char *data;
+  int len;
+  switch (type) {
+    case TCP_SYS_SOCKET:
+      res = tcp_socket();
+      break;
+    case TCP_SYS_BIND:
+      ip = (int *)arg[2];
+      port = (int)arg[3];
+      res = tcp_bind(sockfd, ip, port);
+      break;
+    case TCP_SYS_CONNECT:
+      ip = (int *)arg[2];
+      port = (int)arg[3];
+      res = tcp_connect(sockfd, ip, port);
+      break;
+    case TCP_SYS_LISTEN:
+      res = tcp_listen(sockfd);
+    case TCP_SYS_SEND:
+      data = (char *)arg[2];
+      len = (int) arg[3];
+      res = tcp_send(sockfd, data, len);
+    default:
+      res = 0;
+  }
+  return res;
 }
 
 static int (*syscalls[])(uint32_t arg[]) = {
@@ -216,7 +255,7 @@ static int (*syscalls[])(uint32_t arg[]) = {
   [SYS_dup]               sys_dup,
   [SYS_fetchrun]          sys_fetchrun,
   [SYS_redraw_console]    sys_redraw_console,
-  [SYS_wait_eth_int]      sys_wait_eth_int,
+  [SYS_eth]               sys_eth,
 };
 
 #define NUM_SYSCALLS        ((sizeof(syscalls)) / (sizeof(syscalls[0])))

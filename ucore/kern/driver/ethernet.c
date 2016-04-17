@@ -51,8 +51,8 @@ void ethernet_int_handler()
 void wait_ethernet_int()
 {
     bool intr_flag;
-    local_intr_save(intr_flag);
     wait_t __wait, *wait = &__wait;
+    local_intr_save(intr_flag);
 try_again:
     wait_current_set(wait_queue, wait, WT_ETH);
     local_intr_restore(intr_flag);
@@ -64,6 +64,15 @@ try_again:
     wait_current_del(wait_queue, wait);
     if (wait->wakeup_flags != WT_ETH) {
         goto try_again;
+    }
+    local_intr_restore(intr_flag);
+}
+
+void wakeup_ethernet() {
+    bool intr_flag;
+    local_intr_save(intr_flag);
+    if (!wait_queue_empty(wait_queue)) {
+      wakeup_queue(wait_queue, WT_ETH, 1);
     }
     local_intr_restore(intr_flag);
 }

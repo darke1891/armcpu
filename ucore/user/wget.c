@@ -12,6 +12,7 @@
 #include <stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <syscall.h>
 
 int fd1 = -1;
 #define MAX_HTTP_REQUEST_LEN (500/4)
