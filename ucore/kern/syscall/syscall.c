@@ -198,6 +198,7 @@ sys_eth(uint32_t arg[]) {
   tcp_send_buffer[len] = '\0';
   tcp_handshake(8888, IP_ADDR, REMOTE_IP_ADDR);
 */
+
   int type = (int) arg[0];
   int sockfd = (int) arg[1];
   int res = 0;

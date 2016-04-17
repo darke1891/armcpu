@@ -95,7 +95,7 @@ void tcp_handle(int length) {
     tcp_state = TCP_ESTABLISHED;
     kprintf("TCP handshake complete\n");
 
-    wakeup_ethernet();
+//    wakeup_ethernet();
     return;
   }
   if(data[TCP_FLAGS] & TCP_FLAG_RST) {

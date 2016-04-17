@@ -20,7 +20,7 @@ int ethernet_rx_len;
 int ethernet_tx_data[2048];
 int ethernet_tx_len;
 
-static wait_queue_t __wait_queue, *wait_queue = &__wait_queue;
+static wait_queue_t __eth_wait_queue, *eth_wait_queue = &__eth_wait_queue;
 
 unsigned int ethernet_read(unsigned int addr) {
     VPTR(ENET_IO_ADDR) = addr;
@@ -51,17 +51,17 @@ void ethernet_int_handler()
 void wait_ethernet_int()
 {
     bool intr_flag;
-    wait_t __wait, *wait = &__wait;
     local_intr_save(intr_flag);
+    wait_t __wait, *wait = &__wait;
 try_again:
-    wait_current_set(wait_queue, wait, WT_ETH);
+    wait_current_set(eth_wait_queue, wait, WT_ETH);
     local_intr_restore(intr_flag);
 
     schedule();
 
     local_intr_save(intr_flag);
 
-    wait_current_del(wait_queue, wait);
+    wait_current_del(eth_wait_queue, wait);
     if (wait->wakeup_flags != WT_ETH) {
         goto try_again;
     }
@@ -71,8 +71,8 @@ try_again:
 void wakeup_ethernet() {
     bool intr_flag;
     local_intr_save(intr_flag);
-    if (!wait_queue_empty(wait_queue)) {
-      wakeup_queue(wait_queue, WT_ETH, 1);
+    if (!wait_queue_empty(eth_wait_queue)) {
+      wakeup_queue(eth_wait_queue, WT_ETH, 1);
     }
     local_intr_restore(intr_flag);
 }
@@ -118,7 +118,7 @@ void ethernet_powerup() {
 }
 
 void ethernet_init() {
-    wait_queue_init(wait_queue);
+    wait_queue_init(eth_wait_queue);
 
         kprintf("Network initializing...\n");
         ethernet_powerup();
