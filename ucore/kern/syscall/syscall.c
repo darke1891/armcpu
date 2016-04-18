@@ -222,10 +222,17 @@ sys_eth(uint32_t arg[]) {
       break;
     case TCP_SYS_LISTEN:
       res = tcp_listen(sockfd);
+      break;
     case TCP_SYS_SEND:
       data = (char *)arg[2];
       len = (int) arg[3];
       res = tcp_send(sockfd, data, len);
+      break;
+    case TCP_SYS_RECV:
+      data = (char *)arg[2];
+      len = (int) arg[3];
+      res = tcp_recv(sockfd, data, len);
+      break;
     default:
       res = 0;
   }
