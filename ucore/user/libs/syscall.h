@@ -41,7 +41,7 @@ int sys_bind(int sockfd, int* ip, int port);
 int sys_connect(int sockfd, int* ip, int port);
 int sys_listen(int sockfd);
 int sys_send(int sockfd, char* data, int len);
-
+int sys_recv(int sockfd, char* data, int len);
 
 
 #endif /* !__USER_LIBS_SYSCALL_H__ */

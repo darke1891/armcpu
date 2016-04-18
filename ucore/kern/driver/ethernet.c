@@ -20,7 +20,8 @@ int ethernet_rx_len;
 int ethernet_tx_data[2048];
 int ethernet_tx_len;
 
-static wait_queue_t __eth_wait_queue, *eth_wait_queue = &__eth_wait_queue;
+wait_queue_t __eth_wait_queue;
+wait_queue_t *eth_wait_queue = &__eth_wait_queue;
 
 unsigned int ethernet_read(unsigned int addr) {
     VPTR(ENET_IO_ADDR) = addr;
@@ -71,9 +72,7 @@ try_again:
 void wakeup_ethernet() {
     bool intr_flag;
     local_intr_save(intr_flag);
-    if (!wait_queue_empty(eth_wait_queue)) {
-      wakeup_queue(eth_wait_queue, WT_ETH, 1);
-    }
+    wakeup_first(eth_wait_queue, WT_ETH, 1);
     local_intr_restore(intr_flag);
 }
 

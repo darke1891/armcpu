@@ -176,3 +176,7 @@ int sys_listen(int sockfd) {
 int sys_send(int sockfd, char* data, int len) {
   return syscall(SYS_eth, TCP_SYS_SEND, sockfd, data, len);
 }
+
+int sys_recv(int sockfd, char* data, int len) {
+  return syscall(SYS_eth, TCP_SYS_RECV, sockfd, data, len);
+}

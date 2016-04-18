@@ -20,7 +20,9 @@ main(int argc, char **argv) {
   char *message = "test message";
   int message_len = 12;
   int ip[4] = {192, 168, 2, 2};
-  connect(0, ip, 8888);
+  connect(0, ip, 8889);
   send(0, message, message_len);
+  recv(0, message, 4);
+  cprintf("%s\n", message);
   return 0;
 }

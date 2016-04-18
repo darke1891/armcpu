@@ -10,6 +10,7 @@
 #include <ip.h>
 #include <defs.h>
 #include <eth_utils.h>
+#include <intr.h>
 
 #define WINDOW_SIZE 1000
 #define INIT_SEQ 1001
@@ -28,6 +29,8 @@ int tcp_recving = 0, tcp_sending = 0;
 
 int recv_pos = 0;
 int recv_len = 0;
+int recv_len_target = 0;
+int recv_waiting = 0;
 
 int tcp_src_port, tcp_dst_port;
 int tcp_src_addr[4], tcp_dst_addr[4];
@@ -95,7 +98,7 @@ void tcp_handle(int length) {
     tcp_state = TCP_ESTABLISHED;
     kprintf("TCP handshake complete\n");
 
-//    wakeup_ethernet();
+    wakeup_ethernet();
     return;
   }
   if(data[TCP_FLAGS] & TCP_FLAG_RST) {
@@ -141,19 +144,15 @@ void tcp_handle(int length) {
 //      kprintf("recved total length: %d bytes\n", recv_len);
 //      kprintf("tcp: datalen: %d, tcphdrlen: %d\n", datalen, tcphdrlen);
 
-    kprintf("get len %d", datalen);
-    print_data = (int *)(data+tcphdrlen);
-    memset(print_buf, 0, 100);
-    for (i = 0;i < datalen;i++)
-      print_buf[i] = (char)print_data[i];
-    kprintf("recv : %s |\n",print_buf);
-
       if (tcp_recving) {
         if (recv_pos+datalen > BUF_LENGTH) {
         } else {
         if (datalen>0)
           eth_memcpy(BUF+recv_pos,data+tcphdrlen, datalen);
           recv_pos += datalen;
+          if (recv_waiting && (recv_pos >= recv_len_target)) {
+            wakeup_ethernet();
+          }
         }
 
         if (data[TCP_FLAGS] & TCP_FLAG_FIN) {
@@ -234,5 +233,25 @@ int tcp_send(int sockfd, char* data, int len) {
   tcp_send_packet(TCP_FLAG_PSH|TCP_FLAG_ACK, data_in, len);
   tcp_seq += len;
   tcp_recving = 1;
+  return 0;
+}
+
+int tcp_recv(int sockfd, char* data, int len) {
+  int i;
+  bool intr_flag;
+  kprintf("tcp_handle recving len: %d\n", len);
+  local_intr_save(intr_flag);
+  if (recv_pos < len) {
+    recv_waiting = 1;
+    recv_len_target = len;
+    local_intr_restore(intr_flag);
+    wait_ethernet_int();
+    local_intr_save(intr_flag);
+    recv_waiting = 0;
+  }
+    for (i = 0; i < len;i++)
+      data[i] = (char)BUF[i];
+    data[len] = '\0';
+  local_intr_restore(intr_flag);
   return 0;
 }

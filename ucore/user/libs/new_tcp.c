@@ -20,3 +20,7 @@ int listen(int sockfd) {
 int send(int sockfd, char* data, int len) {
 	return sys_send(sockfd, data, len);
 }
+
+int recv(int sockfd, char* data, int len) {
+	return sys_recv(sockfd, data, len);
+}
