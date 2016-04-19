@@ -9,7 +9,7 @@ int IP_ADDR[4] = {192, 168, 2, 2};
 int REMOTE_IP_ADDR[4] = {192, 168, 2, 1};
 
 void ip_handle() {
-    kprintf("handle ip\n");
+//    kprintf("handle ip\n");
     int * data = ethernet_rx_data + ETHERNET_HDR_LEN;
     // not IPv4 or header is longer than 20bit
     if(data[IP_VERSION] != IP_VERSION_VAL)

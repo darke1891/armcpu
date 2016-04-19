@@ -12,7 +12,7 @@
 #include <defs.h>
 
 void icmp_handle(int length) {
-    kprintf("handle icmp\n");
+//    kprintf("handle icmp\n");
     int * data = ethernet_rx_data + ETHERNET_HDR_LEN + IP_HDR_LEN;
     if(data[ICMP_TYPE] != ICMP_TYPE_ECHO_REQUEST)
         return;

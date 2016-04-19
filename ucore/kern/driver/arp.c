@@ -17,7 +17,7 @@ int ARP_FIX_HDR[] = {
 };
 
 void arp_handle() {
-    kprintf("handle arp\n");
+//    kprintf("handle arp\n");
     int * data = ethernet_rx_data + ETHERNET_HDR_LEN;
     if(data[ARP_TYPE] == ARP_TYPE_REQUEST) {
         if(eth_memcmp(data + ARP_TARGET_IP, IP_ADDR, 4) != 0)

@@ -3,11 +3,12 @@
 
 #define TCP_CLOSED 1
 #define TCP_SYNC_RECVED 2
-#define TCP_ESTABLISHED 3
-#define TCP_FIN_SENT 4
-#define TCP_SYNC_SENT 5
-#define TCP_SYNACK_RECVED 6
-#define TCP_FIN_RECV 7
+#define TCP_LISTEN 3
+#define TCP_ESTABLISHED 4
+#define TCP_FIN_SENT 5
+#define TCP_SYNC_SENT 6
+#define TCP_SYNACK_RECVED 7
+#define TCP_FIN_RECV 8
 
 #define IP_PROTOCAL_TCP 0x06
 

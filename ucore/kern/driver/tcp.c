@@ -18,14 +18,9 @@
 
 int tcp_inited = 0;
 
-#define MYDATA_LENGTH 100
-int MYDATA[MYDATA_LENGTH * 4];
-#define BUF_LENGTH MYDATA_LENGTH*4
+#define BUF_LENGTH 1000
+int MYDATA[BUF_LENGTH];
 #define BUF MYDATA
-int tcp_recving = 0, tcp_sending = 0;
-
-#define CHUNK_LEN 1000
-#define LAST_CHUNK_POS ((MYDATA_LENGTH / CHUNK_LEN) * CHUNK_LEN)
 
 int recv_pos = 0;
 int recv_len = 0;
@@ -33,9 +28,11 @@ int recv_len_target = 0;
 int recv_waiting = 0;
 
 int tcp_src_port, tcp_dst_port;
+int tcp_target_port;
 int tcp_src_addr[4], tcp_dst_addr[4];
 int tcp_ack = 0, tcp_seq = INIT_SEQ;
 int tcp_state = TCP_CLOSED;
+int tcp_my_seq;
 
 void tcp_handshake(int *src_addr, int *dst_addr) {
   eth_memcpy(ethernet_rx_src, R_MAC_ADDR, 6);
@@ -57,7 +54,7 @@ void tcp_handshake(int *src_addr, int *dst_addr) {
 }
 
 void tcp_handle(int length) {
-  kprintf("handle tcp\n");
+//  kprintf("handle tcp\n");
   if(tcp_inited == 0)
   {
     tcp_inited = 1;
@@ -65,25 +62,29 @@ void tcp_handle(int length) {
   int * data = ethernet_rx_data + ETHERNET_HDR_LEN + IP_HDR_LEN;
 
   if((data[TCP_FLAGS] & TCP_FLAG_SYN) &&
-    (tcp_state == TCP_CLOSED || tcp_state == 0)) {
+    (tcp_state == TCP_LISTEN || tcp_state == 0)) {
     tcp_src_port = mem2int(data + TCP_DST_PORT, 2);
     tcp_dst_port = mem2int(data + TCP_SRC_PORT, 2);
+    if (tcp_src_port != tcp_target_port)
+      return;
+//    kprintf("dst_port : %d target_port : %d\n", tcp_src_port, tcp_target_port);
     eth_memcpy(tcp_src_addr, data - IP_HDR_LEN + IP_DST, 4);
     eth_memcpy(tcp_dst_addr, data - IP_HDR_LEN + IP_SRC, 4);
     tcp_ack = mem2int(data + TCP_SEQ, 4) + 1;
+    tcp_seq = (rand() & 0xfff);
     tcp_state = TCP_SYNC_RECVED;
+//    kprintf("recv seq %d in listening\n", tcp_ack-1);
     tcp_send_packet(TCP_FLAG_SYN | TCP_FLAG_ACK,
             0, 0);
     return;
   }
 
   // not closed, check port & addr
-  if(tcp_src_port != mem2int(data + TCP_DST_PORT, 2)
-    || tcp_dst_port != mem2int(data + TCP_SRC_PORT, 2)
-    || eth_memcmp(data - IP_HDR_LEN + IP_DST, tcp_src_addr, 4) != 0
-    || eth_memcmp(data - IP_HDR_LEN + IP_SRC, tcp_dst_addr, 4) != 0) {
+  if(tcp_src_port != mem2int(data + TCP_DST_PORT, 2)){
+//    kprintf("wrong port: %d, %d\n", tcp_src_port, mem2int(data + TCP_DST_PORT, 2));
     return;
   }
+  tcp_dst_port == mem2int(data + TCP_SRC_PORT, 2);
   if(tcp_state == TCP_FIN_RECV) {
     tcp_state = TCP_CLOSED;
     kprintf("TCP_CLOSED\n");
@@ -103,24 +104,40 @@ void tcp_handle(int length) {
   }
   if(data[TCP_FLAGS] & TCP_FLAG_RST) {
     tcp_state = TCP_CLOSED;
+    kprintf("TCP_CLOSED\n");
     return;
   }
   if(tcp_state == TCP_FIN_SENT) {
     tcp_seq = mem2int(data + TCP_ACK, 4);
     tcp_send_packet(TCP_FLAG_RST, 0, 0);
     tcp_state = TCP_CLOSED;
+    kprintf("TCP_CLOSED\n");
     return;
   }
   if(tcp_state == TCP_SYNC_RECVED &&
     (data[TCP_FLAGS] & TCP_FLAG_ACK)) {
     tcp_seq = mem2int(data + TCP_ACK, 4);
+    tcp_my_seq = tcp_seq;
     tcp_ack = mem2int(data + TCP_SEQ, 4) + 1;
     tcp_state = TCP_ESTABLISHED;
+    kprintf("TCP_ESTABLISHED\n");
+    wakeup_ethernet();
     return;
   }
+
+/*
+  if ((tcp_state == TCP_LISTEN) && (data[TCP_FLAGS] & TCP_FLAG_SYN) {
+    kprintf("listening\n");
+    tcp_seq = (rand() & 0xfff);
+    tcp_ack = mem2int(data + TCP_SEQ, 4);
+    tcp_send_packet(TCP_FLAGS_SYN | TCP_FLAG_ACK, 0, 0);
+  }
+*/
+
   if ((data[TCP_FLAGS] & TCP_FLAG_FIN) && !(data[TCP_FLAGS] & TCP_FLAG_PSH)) {
     tcp_ack +=  1;
     tcp_send_packet(TCP_FLAG_FIN | TCP_FLAG_ACK, 0, 0);
+    kprintf("TCP_CLOSED\n");
     tcp_state = TCP_CLOSED;
   }
   if(tcp_state == TCP_ESTABLISHED) {
@@ -129,27 +146,31 @@ void tcp_handle(int length) {
       char print_buf[100];
       int *print_data;
       int i;
-      if (datalen <= 0) return;
       // tcp_seq = mem2int(data + TCP_ACK, 4);
-      // kprintf("tcp_ack: %d, recv_seq: %d\n", tcp_ack, mem2int(data + TCP_SEQ, 4));
-      if (tcp_ack != mem2int(data + TCP_SEQ, 4)) {
+
+//      kprintf("tcp_ack: %d, recv_seq: %d\n", tcp_ack, mem2int(data + TCP_SEQ, 4));
+//      kprintf("recv_ack: %d, flags: %d\n", mem2int(data + TCP_ACK, 4), data[TCP_FLAGS]);
+
+//      if (tcp_ack != mem2int(data + TCP_SEQ, 4)) {
         //kprintf("tcp_handle: sequence incorrect\n");
         // out of order pkt, re ACK
-        tcp_send_packet(TCP_FLAG_ACK, 0, 0);
-        return;
-      }
+//        tcp_send_packet(TCP_FLAG_ACK, 0, 0);
+//        return;
+//      }
       // in order pkt
-      tcp_ack += datalen;
+//      tcp_ack += datalen;
 //      if ((recv_len & 0xffff) == 0)
 //      kprintf("recved total length: %d bytes\n", recv_len);
 //      kprintf("tcp: datalen: %d, tcphdrlen: %d\n", datalen, tcphdrlen);
-
-      if (tcp_recving) {
-        if (recv_pos+datalen > BUF_LENGTH) {
-        } else {
-        if (datalen>0)
+//        kprintf("recv_pos: %d datalen : %d\n", recv_pos, datalen);
+        if (recv_pos + datalen > BUF_LENGTH) {
+        } else
+        if (datalen>0) {
           eth_memcpy(BUF+recv_pos,data+tcphdrlen, datalen);
           recv_pos += datalen;
+          tcp_ack = mem2int(data + TCP_SEQ, 4) + datalen;
+          tcp_seq = tcp_my_seq;
+          tcp_send_packet(TCP_FLAG_ACK, 0, 0);
           if (recv_waiting && (recv_pos >= recv_len_target)) {
             wakeup_ethernet();
           }
@@ -159,12 +180,11 @@ void tcp_handle(int length) {
           tcp_ack +=  1;
           tcp_send_packet(TCP_FLAG_ACK | TCP_FLAG_FIN, 0, 0);
           tcp_state = TCP_FIN_RECV;
-      } else {
-        tcp_send_packet(TCP_FLAG_ACK, 0, 0);
-      }
+        } else if (data[TCP_FLAGS] & TCP_FLAG_ACK) {
+          tcp_my_seq = mem2int(data + TCP_ACK, 4);
+        }
       return;
     }
-  }
 }
 
 // length is the len(data)
@@ -201,6 +221,7 @@ void tcp_send_packet(int flags, int * data, int length) {
   packet[TCP_CHECKSUM] = MSB(sum);
   packet[TCP_CHECKSUM + 1] = LSB(sum);
   ip_send(IP_PROTOCAL_TCP, length);
+  tcp_my_seq += length;
 }
 
 int tcp_socket() {
@@ -208,7 +229,7 @@ int tcp_socket() {
 }
 
 int tcp_bind(int sockfd, int *ip, int port) {
-  tcp_dst_port = port;
+  tcp_target_port = port;
   return 0;
 }
 
@@ -220,19 +241,23 @@ int tcp_connect(int sockfd, int *ip, int port) {
 }
 
 int tcp_listen(int sockfd) {
+  tcp_state = TCP_LISTEN;
+  wait_ethernet_int();
   return 0;
 }
 
 int tcp_send(int sockfd, char* data, int len) {
-  int data_in[101];
+  int data_in[1000];
   int i;
-  kprintf("tcp_handle send msg: %s, len: %d\n", data, len);
+  bool intr_flag;
+  kprintf("tcp_handle send len: %d\n", len);
+  local_intr_save(intr_flag);
   for (i=0;i<len;i++)
     data_in[i] = data[i];
   data_in[len] = '\0';
+  tcp_seq = tcp_my_seq;
   tcp_send_packet(TCP_FLAG_PSH|TCP_FLAG_ACK, data_in, len);
-  tcp_seq += len;
-  tcp_recving = 1;
+  local_intr_restore(intr_flag);
   return 0;
 }
 
