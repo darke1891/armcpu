@@ -180,3 +180,7 @@ int sys_send(int sockfd, char* data, int len) {
 int sys_recv(int sockfd, char* data, int len) {
   return syscall(SYS_eth, TCP_SYS_RECV, sockfd, data, len);
 }
+
+int sys_tcp_close(int sockfd) {
+  return syscall(SYS_eth, TCP_SYS_CLOSE, sockfd);
+}

@@ -24,3 +24,7 @@ int send(int sockfd, char* data, int len) {
 int recv(int sockfd, char* data, int len) {
 	return sys_recv(sockfd, data, len);
 }
+
+int tcp_close(int sockfd) {
+	return sys_tcp_close(sockfd);
+}

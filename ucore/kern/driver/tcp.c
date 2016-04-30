@@ -293,3 +293,7 @@ int tcp_recv(int sockfd, char* data, int len) {
   local_intr_restore(intr_flag);
   return 0;
 }
+
+int tcp_close(int sockfd) {
+  return 0;
+}

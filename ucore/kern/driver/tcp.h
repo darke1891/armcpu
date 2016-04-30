@@ -53,6 +53,6 @@ int tcp_connect(int sockfd, int* ip, int port);
 int tcp_listen(int sockfd);
 int tcp_send(int sockfd, char* data, int len);
 int tcp_recv(int sockfd, char* data, int len);
-
+int tcp_close(int sockfd);
 
 #endif

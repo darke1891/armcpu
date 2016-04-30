@@ -15,6 +15,7 @@ int connect(int sockfd, int* ip, int port);
 int listen(int sockfd);
 int send(int sockfd, char* data, int len);
 int recv(int sockfd, char* data, int len);
+int tcp_close(int sockfd);
 
 
 #endif

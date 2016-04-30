@@ -233,6 +233,9 @@ sys_eth(uint32_t arg[]) {
       len = (int) arg[3];
       res = tcp_recv(sockfd, data, len);
       break;
+    case TCP_SYS_CLOSE:
+      res = tcp_close(sockfd);
+      break;
     default:
       res = 0;
   }
