@@ -16,8 +16,8 @@
 #define INIT_SEQ 1001
 #define TIMEOUT 30
 
-#define BUF_LENGTH 1000
-int BUF[BUF_LENGTH];
+#define buf_length 1000
+char recv_buffer[buf_length];
 
 int recv_pos = 0;
 int recv_start = 0;
@@ -158,12 +158,12 @@ void tcp_handle(int length) {
       // in order pkt
 //      tcp_ack += datalen;
 //      kprintf("tcp: datalen: %d, tcphdrlen: %d\n", datalen, tcphdrlen);
-        if ((datalen>0) && (tcp_remote_seq == mem2int(data + TCP_SEQ, 4))) {
-          for (i=0;(i<datalen) && (recv_len < BUF_LENGTH);i++) {
-            BUF[recv_pos] = data[tcphdrlen + i];
+        if ((datalen>0) && (tcp_remote_seq == mem2int(data + TCP_SEQ, 4)) && (datalen + recv_len <= buf_length)) {
+          for (i=0;i<datalen;i++) {
+            recv_buffer[recv_pos] = (char)(data[tcphdrlen + i]);
             recv_pos++;
             recv_len++;
-            if (recv_pos == BUF_LENGTH)
+            if (recv_pos == buf_length)
               recv_pos = 0;
           }
           tcp_ack = mem2int(data + TCP_SEQ, 4) + datalen;
@@ -272,8 +272,8 @@ int tcp_recv(int sockfd, char* data, int len) {
   bool intr_flag;
   kprintf("tcp_handle recving len: %d\n", len);
   local_intr_save(intr_flag);
-  if (len > BUF_LENGTH)
-    len = BUF_LENGTH;
+  if (len > buf_length)
+    len = buf_length;
   if (recv_len < len) {
     recv_waiting = 1;
     recv_len_target = len;
@@ -283,10 +283,10 @@ int tcp_recv(int sockfd, char* data, int len) {
     recv_waiting = 0;
   }
     for (i = 0; (i < len) && (recv_len > 0);i++) {
-      data[i] = (char)BUF[recv_start];
+      data[i] = recv_buffer[recv_start];
       recv_start++;
       recv_len--;
-      if (recv_start == BUF_LENGTH)
+      if (recv_start == buf_length)
         recv_start = 0;
     }
     data[len] = '\0';

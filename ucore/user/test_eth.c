@@ -26,7 +26,8 @@ main(int argc, char **argv) {
   listen(0);
   cprintf("return from listen\n");
 //  connect(0, ip, 8889);
-  recv(0, message, message_len);
+  for (i=0;i<26;i++)
+    recv(0, message+i*(message_len/26), message_len/26);
   cprintf("get message\n");
   for (i=0;i<26;i++)
     for (j=0;j<13;j++) {
@@ -34,7 +35,7 @@ main(int argc, char **argv) {
       message[i*27+j] = message[i*27+25-j];
       message[i*27+25-j] = temp;
     }
-  send(0, message, message_len / 2);
-  send(0, message+message_len / 2, message_len / 2);
+  for (i=0;i<26;i++)
+    send(0, message+i*(message_len/26), message_len/26);
   return 0;
 }
