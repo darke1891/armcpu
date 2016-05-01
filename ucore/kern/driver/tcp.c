@@ -147,7 +147,7 @@ void tcp_handle(int length) {
 
       kprintf("tcp_remote_seq: %d, recv_seq: %d\n", tcp_remote_seq, mem2int(data + TCP_SEQ, 4));
       kprintf("recv_ack: %d, flags: %d\n", mem2int(data + TCP_ACK, 4), data[TCP_FLAGS]);
-      kprintf("datalen : %d\n", datalen);
+//      kprintf("datalen : %d\n", datalen);
 
 //      if (tcp_ack != mem2int(data + TCP_SEQ, 4)) {
         //kprintf("tcp_handle: sequence incorrect\n");
@@ -175,6 +175,9 @@ void tcp_handle(int length) {
             wakeup_ethernet();
           }
         }
+
+        if ((datalen == 0) && (data[TCP_FLAGS] & TCP_FLAG_ACK) && (mem2int(data + TCP_ACK, 4) == tcp_my_seq))
+          wakeup_ethernet();
 
         if (data[TCP_FLAGS] & TCP_FLAG_FIN) {
           tcp_ack +=  1;
@@ -264,6 +267,7 @@ int tcp_send(int sockfd, char* data, int len) {
   tcp_seq = tcp_my_seq;
   tcp_send_packet(TCP_FLAG_PSH|TCP_FLAG_ACK, data_in, len);
   local_intr_restore(intr_flag);
+  wait_ethernet_int();
   return 0;
 }
 

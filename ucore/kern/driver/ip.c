@@ -25,7 +25,7 @@ void ip_handle() {
 }
 
 void ip_send(int proto, int length) {
-    length += 20; // ip header
+    length += IP_HDR_LEN; // ip header
     ethernet_set_tx(ethernet_rx_src, ETHERNET_TYPE_IP);
     int * data = ethernet_tx_data + ETHERNET_HDR_LEN;
     data[IP_VERSION] = IP_VERSION_VAL;
@@ -38,7 +38,7 @@ void ip_send(int proto, int length) {
     eth_memcpy(data + IP_SRC, IP_ADDR, 4);
     eth_memcpy(data + IP_DST,
         ethernet_rx_data + ETHERNET_HDR_LEN + IP_SRC, 4);
-    ethernet_tx_len = ETHERNET_HDR_LEN + IP_HDR_LEN + length;
+    ethernet_tx_len = ETHERNET_HDR_LEN + length;
     ethernet_send();
 }
 

@@ -25,12 +25,15 @@ wait_queue_t *eth_wait_queue = &__eth_wait_queue;
 
 unsigned int ethernet_read(unsigned int addr) {
     VPTR(ENET_IO_ADDR) = addr;
+    nop();nop();
     return VPTR(ENET_DATA_ADDR);
 }
 
 void ethernet_write(unsigned int addr, unsigned int data) {
     VPTR(ENET_IO_ADDR) = addr;
+    nop();nop();
     VPTR(ENET_DATA_ADDR) = data;
+    nop();nop();
 }
 
 void ethernet_int_handler()
@@ -190,13 +193,13 @@ void ethernet_send() {
     ethernet_write(DM9000_REG_MWCMDX, 0);
     // select reg
     VPTR(ENET_IO_ADDR) = DM9000_REG_MWCMD;
-//    nop(); nop();
+    nop(); nop();
     int i;
     for(i = 0 ; i < ethernet_tx_len ; i += 2){
         int val = ethernet_tx_data[i];
         if(i + 1 != ethernet_tx_len) val |= (ethernet_tx_data[i+1] << 8);
         VPTR(ENET_DATA_ADDR) = val;
-//        nop();
+        nop();
     }
     // write length
     ethernet_write(DM9000_REG_TXPLH, MSB(ethernet_tx_len));
@@ -212,18 +215,18 @@ void ethernet_recv() {
     ethernet_read(DM9000_REG_MRCMDX);
     // select reg
     VPTR(ENET_IO_ADDR) = DM9000_REG_MRCMDX1;
-//    nop(); nop();
+    nop(); nop();
     int status = LSB(VPTR(ENET_DATA_ADDR));
     if(status != 0x01){
         ethernet_rx_len = -1;
         return;
     }
     VPTR(ENET_IO_ADDR) = DM9000_REG_MRCMD;
-//    nop(); nop();
+    nop(); nop();
     status = MSB(VPTR(ENET_DATA_ADDR));
-//    nop(); nop();
+    nop(); nop();
     ethernet_rx_len = VPTR(ENET_DATA_ADDR);
-//    nop(); nop();
+    nop(); nop();
     if(status & (RSR_LCS | RSR_RWTO | RSR_PLE |
                  RSR_AE | RSR_CE | RSR_FOE)) {
         ethernet_rx_len = -1;
