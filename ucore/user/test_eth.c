@@ -37,6 +37,6 @@ main(int argc, char **argv) {
     }
   for (i=0;i<6;i++)
     send(0, message+i*(message_len/6), message_len/6);
-  tcp_close(0);
+//  tcp_close(0);
   return 0;
 }

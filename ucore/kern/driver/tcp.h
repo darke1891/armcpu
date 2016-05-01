@@ -42,11 +42,42 @@
 #define TCP_SYS_RECV 5
 #define TCP_SYS_CLOSE 6
 
-void tcp_handle(int *dataHead, int length);
-void tcp_send_packet(int flags, int * data, int length);
-void tcp_send_queue();
+#define buf_length 1000
+#define TCP_QUEUE_NUM 2
 
-void tcp_handshake(int *src_addr, int *dst_addr);
+struct tcp_queue_s{
+  char recv_buffer[buf_length];
+  char send_buffer[buf_length];
+
+  int send_pos;
+  int send_start;
+  int send_len;
+  int send_waiting;
+
+  int recv_pos;
+  int recv_start;
+  int recv_len;
+  int recv_len_target;
+  int recv_waiting;
+
+  int tcp_src_port, tcp_dst_port;
+  int tcp_target_port;
+  int tcp_src_addr[4], tcp_dst_addr[4];
+  int tcp_ack, tcp_seq;
+  int tcp_state;
+  int tcp_my_seq;
+  int tcp_remote_seq;
+};
+
+extern struct tcp_queue_s tcp_queue[TCP_QUEUE_NUM];
+
+void tcp_init();
+
+void tcp_handle(int *dataHead, int length);
+void tcp_send_packet(int sockfd, int flags, int * data, int length);
+void tcp_send_queue(int sockfd);
+
+void tcp_handshake(int sockfd, int *src_addr, int *dst_addr);
 
 int tcp_socket();
 int tcp_bind(int sockfd, int* ip, int port);
