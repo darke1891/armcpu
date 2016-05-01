@@ -11,9 +11,9 @@
 #include <eth_utils.h>
 #include <defs.h>
 
-void icmp_handle(int length) {
+void icmp_handle(int *dataHead, int length) {
 //    kprintf("handle icmp\n");
-    int * data = ethernet_rx_data + ETHERNET_HDR_LEN + IP_HDR_LEN;
+    int * data = dataHead + ETHERNET_HDR_LEN + IP_HDR_LEN;
     if(data[ICMP_TYPE] != ICMP_TYPE_ECHO_REQUEST)
         return;
     int * buf = ethernet_tx_data + ETHERNET_HDR_LEN + IP_HDR_LEN;

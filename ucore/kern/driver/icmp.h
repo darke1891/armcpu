@@ -16,7 +16,7 @@
 #define ICMP_TYPE_ECHO_REQUEST 0x08
 #define ICMP_TYPE_ECHO_REPLY 0x00
 
-void icmp_handle(int length);
+void icmp_handle(int *dataHead, int length);
 
 void icmp_checksum(int * data, int length);
 

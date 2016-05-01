@@ -21,7 +21,7 @@ extern int REMOTE_IP_ADDR[4];
 
 #define IP_HDR_LEN 20
 
-void ip_handle();
+void ip_handle(int *dataHead, int length);
 void ip_send(int proto, int length);
 
 #endif

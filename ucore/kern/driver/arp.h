@@ -18,6 +18,6 @@
 #define ARP_BODY_LEN (ARP_TARGET_IP + 4)
 
 // handle arp
-void arp_handle();
+void arp_handle(int *dataHead, int length);
 
 #endif

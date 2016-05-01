@@ -16,14 +16,14 @@ int ARP_FIX_HDR[] = {
     0x00,       // high bit of type (hack)
 };
 
-void arp_handle() {
+void arp_handle(int *dataHead, int length) {
 //    kprintf("handle arp\n");
-    int * data = ethernet_rx_data + ETHERNET_HDR_LEN;
+    int * data = dataHead + ETHERNET_HDR_LEN;
     if(data[ARP_TYPE] == ARP_TYPE_REQUEST) {
         if(eth_memcmp(data + ARP_TARGET_IP, IP_ADDR, 4) != 0)
             return;
         ethernet_tx_len = ETHERNET_HDR_LEN + ARP_BODY_LEN;
-        ethernet_set_tx(ethernet_rx_src, ETHERNET_TYPE_ARP);
+        ethernet_set_tx(ETHERNET_TYPE_ARP);
 
         int * buf = ethernet_tx_data + ETHERNET_HDR_LEN;
         eth_memcpy(buf, ARP_FIX_HDR, 6 + 1);

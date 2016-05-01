@@ -42,7 +42,7 @@
 #define TCP_SYS_RECV 5
 #define TCP_SYS_CLOSE 6
 
-void tcp_handle(int length);
+void tcp_handle(int *dataHead, int length);
 void tcp_send_packet(int flags, int * data, int length);
 
 void tcp_handshake(int *src_addr, int *dst_addr);

@@ -17,8 +17,8 @@
 
 extern int MAC_ADDR[6];
 extern int R_MAC_ADDR[6];
-extern int ethernet_rx_data[2048];
-extern int ethernet_rx_len;
+//extern int ethernet_rx_data[2048];
+//extern int ethernet_rx_len;
 extern int ethernet_tx_data[2048];
 extern int ethernet_tx_len;
 
@@ -56,7 +56,7 @@ int ethernet_check_duplex(); // return 1 if full duplex
 void ethernet_send();
 void ethernet_recv();
 
-void ethernet_set_tx(int * dst, int type);
+void ethernet_set_tx(int type);
 int get_tx_addr();
 void set_tx_addr(int addr);
 void set_eth_int(int open);

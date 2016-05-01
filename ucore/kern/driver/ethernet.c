@@ -42,10 +42,10 @@ void ethernet_int_handler()
     if(ethernet_rx_len > 0) {
         int type = ethernet_rx_type;
         if(type == ETHERNET_TYPE_ARP) {
-            arp_handle();
+            arp_handle(ethernet_rx_data, ethernet_rx_len);
         } else
         if(type == ETHERNET_TYPE_IP) {
-            ip_handle();
+            ip_handle(ethernet_rx_data, ethernet_rx_len);
         } else
             kprintf("Unknow package type %d\n", type);
     }
@@ -242,8 +242,8 @@ void ethernet_recv() {
     ethernet_write(DM9000_REG_ISR, ISR_PR);
 }
 
-void ethernet_set_tx(int * dst, int type) {
-    eth_memcpy(ethernet_tx_data + ETHERNET_DST_MAC, dst, 6);
+void ethernet_set_tx(int type) {
+    eth_memcpy(ethernet_tx_data + ETHERNET_DST_MAC, R_MAC_ADDR, 6);
     eth_memcpy(ethernet_tx_data + ETHERNET_SRC_MAC, MAC_ADDR, 6);
     ethernet_tx_data[12] = MSB(type);
     ethernet_tx_data[13] = LSB(type);

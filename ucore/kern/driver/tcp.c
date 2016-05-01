@@ -34,8 +34,8 @@ int tcp_my_seq;
 int tcp_remote_seq;
 
 void tcp_handshake(int *src_addr, int *dst_addr) {
-  eth_memcpy(ethernet_rx_src, R_MAC_ADDR, 6);
-  eth_memcpy(ethernet_rx_data + ETHERNET_HDR_LEN + IP_SRC, dst_addr, 4);
+//  eth_memcpy(ethernet_rx_src, R_MAC_ADDR, 6);
+//  eth_memcpy(ethernet_rx_data + ETHERNET_HDR_LEN + IP_SRC, dst_addr, 4);
   if (tcp_state != TCP_CLOSED)
     return;
   tcp_seq = (rand() & 0xfff);
@@ -49,9 +49,9 @@ void tcp_handshake(int *src_addr, int *dst_addr) {
   tcp_state = TCP_SYNC_SENT;
 }
 
-void tcp_handle(int length) {
+void tcp_handle(int *dataHead, int length) {
 //  kprintf("handle tcp\n");
-  int * data = ethernet_rx_data + ETHERNET_HDR_LEN + IP_HDR_LEN;
+  int *data = dataHead + ETHERNET_HDR_LEN + IP_HDR_LEN;
 
   if((data[TCP_FLAGS] & TCP_FLAG_SYN) &&
     (tcp_state == TCP_LISTEN || tcp_state == 0)) {

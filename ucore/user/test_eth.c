@@ -19,7 +19,7 @@ int
 main(int argc, char **argv) {
   char message[702];
   int message_len = 702;
-  int ip[4] = {192, 168, 2, 2};
+  int ip[4] = {192, 168, 2, 1};
   int i,j;
   char temp;
   bind(0, ip, 8891);
