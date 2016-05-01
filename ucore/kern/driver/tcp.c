@@ -18,6 +18,12 @@
 
 #define buf_length 1000
 char recv_buffer[buf_length];
+char send_buffer[buf_length];
+
+int send_pos = 0;
+int send_start = 0;
+int send_len = 0;
+int send_waiting = 0;
 
 int recv_pos = 0;
 int recv_start = 0;
@@ -174,8 +180,16 @@ void tcp_handle(int *dataHead, int length) {
           }
         }
 
-        if ((datalen == 0) && (data[TCP_FLAGS] & TCP_FLAG_ACK) && (mem2int(data + TCP_ACK, 4) == tcp_my_seq))
-          wakeup_ethernet();
+        if ((datalen == 0) && (data[TCP_FLAGS] & TCP_FLAG_ACK) && (mem2int(data + TCP_ACK, 4) == tcp_my_seq + send_waiting)) {
+          tcp_my_seq += send_waiting;
+          send_start += send_waiting;
+          if (send_start >= buf_length)
+            send_start -= buf_length;
+          send_len -= send_waiting;
+          send_waiting = 0;
+          if (send_len > 0)
+            tcp_send_queue();
+        }
 
         if (data[TCP_FLAGS] & TCP_FLAG_FIN) {
           tcp_ack +=  1;
@@ -188,7 +202,6 @@ void tcp_handle(int *dataHead, int length) {
 
 // length is the len(data)
 void tcp_send_packet(int flags, int * data, int length) {
-  tcp_my_seq += length;
   int * packet = ethernet_tx_data + ETHERNET_HDR_LEN + IP_HDR_LEN;
   int2mem(packet + TCP_SRC_PORT, 2, tcp_src_port);
   int2mem(packet + TCP_DST_PORT, 2, tcp_dst_port);
@@ -254,19 +267,43 @@ int tcp_listen(int sockfd) {
 }
 
 int tcp_send(int sockfd, char* data, int len) {
-  int data_in[1000];
   int i;
   bool intr_flag;
-  kprintf("tcp_handle send len: %d\n", len);
+  kprintf("tcp send len: %d\n", len);
   local_intr_save(intr_flag);
-  for (i=0;i<len;i++)
-    data_in[i] = data[i];
-  data_in[len] = '\0';
-  tcp_seq = tcp_my_seq;
-  tcp_send_packet(TCP_FLAG_PSH|TCP_FLAG_ACK, data_in, len);
+  for (i=0;i<len;i++) {
+    send_buffer[send_pos] = (int)(data[i]);
+    send_pos++;
+    if (send_pos >= buf_length)
+      send_pos -= buf_length;
+    send_len++;
+  }
   local_intr_restore(intr_flag);
-  wait_ethernet_int();
+  if (send_waiting == 0)
+    tcp_send_queue();
   return 0;
+}
+
+void tcp_send_queue() {
+  int data_out[buf_length];
+  int i;
+  bool intr_flag;
+  int send_now;
+  if (send_len == 0)
+    return;
+  kprintf("tcp sending len: %d\n", send_len);
+  local_intr_save(intr_flag);
+  send_now = send_start;
+  for (i=0;i<send_len;i++) {
+    data_out[i] = send_buffer[send_now];
+    send_now++;
+    if (send_now >= buf_length)
+      send_now -= buf_length;
+  }
+  send_waiting = send_len;
+  tcp_seq = tcp_my_seq;
+  tcp_send_packet(TCP_FLAG_PSH|TCP_FLAG_ACK, data_out, send_waiting);
+  local_intr_restore(intr_flag);
 }
 
 int tcp_recv(int sockfd, char* data, int len) {

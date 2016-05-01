@@ -54,7 +54,7 @@ void ethernet_int_handler()
             } else
                 kprintf("Unknow package type %d\n", type);
         }
-        dataHead += (dataLength / 2) * 2;
+        dataHead += dataLength;
         dataLength = dataHead[0];
     }
 }
