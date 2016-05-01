@@ -34,8 +34,6 @@ int tcp_my_seq;
 int tcp_remote_seq;
 
 void tcp_handshake(int *src_addr, int *dst_addr) {
-//  eth_memcpy(ethernet_rx_src, R_MAC_ADDR, 6);
-//  eth_memcpy(ethernet_rx_data + ETHERNET_HDR_LEN + IP_SRC, dst_addr, 4);
   if (tcp_state != TCP_CLOSED)
     return;
   tcp_seq = (rand() & 0xfff);

@@ -28,10 +28,6 @@ extern int ethernet_tx_len;
 #define ETHERNET_SRC_MAC 6
 #define ETHERNET_HDR_LEN 14
 
-#define ethernet_rx_type ((ethernet_rx_data[12] << 8) | ethernet_rx_data[13])
-#define ethernet_rx_src (ethernet_rx_data + ETHERNET_SRC_MAC)
-#define ethernet_rx_dst (ethernet_rx_data + ETHERNET_DST_MAC)
-
 
 void ethernet_int_handler();
 void wait_ethernet_int();

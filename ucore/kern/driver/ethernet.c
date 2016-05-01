@@ -16,7 +16,6 @@ int MAC_ADDR[6] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
 // hard code remote mac addr when first send
 int R_MAC_ADDR[6] = {0xf0,0xde,0xf1,0x72,0x19,0x2e};
 int ethernet_rx_data[2048];
-int ethernet_rx_len;
 int ethernet_tx_data[2048];
 int ethernet_tx_len;
 
@@ -38,18 +37,26 @@ void ethernet_write(unsigned int addr, unsigned int data) {
 
 void ethernet_int_handler()
 {
+    int *dataHead;
+    int dataLength;
     ethernet_recv();
-    if(ethernet_rx_len > 0) {
-        int type = ethernet_rx_type;
-        if(type == ETHERNET_TYPE_ARP) {
-            arp_handle(ethernet_rx_data, ethernet_rx_len);
-        } else
-        if(type == ETHERNET_TYPE_IP) {
-            ip_handle(ethernet_rx_data, ethernet_rx_len);
-        } else
-            kprintf("Unknow package type %d\n", type);
+    dataLength = ethernet_rx_data[0];
+    dataHead = ethernet_rx_data;
+    while (dataLength >= 0) {
+        dataHead++;
+        if (dataLength >= 14) {
+            int type = ((dataHead[12] << 8) | dataHead[13]);
+            if(type == ETHERNET_TYPE_ARP) {
+                arp_handle(dataHead, dataLength);
+            } else
+            if(type == ETHERNET_TYPE_IP) {
+                ip_handle(dataHead, dataLength);
+            } else
+                kprintf("Unknow package type %d\n", type);
+        }
+        dataHead += (dataLength / 2) * 2;
+        dataLength = dataHead[0];
     }
-
 }
 
 void wait_ethernet_int()
@@ -211,32 +218,39 @@ void ethernet_send() {
 }
 
 void ethernet_recv() {
-    // a dummy read
-    ethernet_read(DM9000_REG_MRCMDX);
-    // select reg
-    VPTR(ENET_IO_ADDR) = DM9000_REG_MRCMDX1;
-    nop(); nop();
-    int status = LSB(VPTR(ENET_DATA_ADDR));
-    if(status != 0x01){
-        ethernet_rx_len = -1;
-        return;
-    }
-    VPTR(ENET_IO_ADDR) = DM9000_REG_MRCMD;
-    nop(); nop();
-    status = MSB(VPTR(ENET_DATA_ADDR));
-    nop(); nop();
-    ethernet_rx_len = VPTR(ENET_DATA_ADDR);
-    nop(); nop();
-    if(status & (RSR_LCS | RSR_RWTO | RSR_PLE |
-                 RSR_AE | RSR_CE | RSR_FOE)) {
-        ethernet_rx_len = -1;
-        return;
-    }
+    int start = 0;
+    int ethernet_rx_len = 0;
     int i;
-    for(i = 0 ; i < ethernet_rx_len ; i += 2) {
-        int data = VPTR(ENET_DATA_ADDR);
-        ethernet_rx_data[i] = LSB(data);
-        ethernet_rx_data[i+1] = MSB(data);
+    while (ethernet_rx_len >= 0) {
+        // a dummy read
+        ethernet_read(DM9000_REG_MRCMDX);
+        // select reg
+        VPTR(ENET_IO_ADDR) = DM9000_REG_MRCMDX1;
+        nop(); nop();
+        int status = LSB(VPTR(ENET_DATA_ADDR));
+        if(status != 0x01){
+            ethernet_rx_len = -1;
+            ethernet_rx_data[start] = ethernet_rx_len;
+            break;
+        }
+        VPTR(ENET_IO_ADDR) = DM9000_REG_MRCMD;
+        nop(); nop();
+        status = MSB(VPTR(ENET_DATA_ADDR));
+        nop(); nop();
+        ethernet_rx_len = VPTR(ENET_DATA_ADDR);
+        nop(); nop();
+        if(status & (RSR_LCS | RSR_RWTO | RSR_PLE |
+                     RSR_AE | RSR_CE | RSR_FOE)) {
+            ethernet_rx_len = -1;
+        }
+        ethernet_rx_data[start] = ethernet_rx_len;
+        start++;
+        for(i = 0 ; i < ethernet_rx_len ; i += 2) {
+            int data = VPTR(ENET_DATA_ADDR);
+            ethernet_rx_data[start+i] = LSB(data);
+            ethernet_rx_data[start+i+1] = MSB(data);
+        }
+        start += ethernet_rx_len;
     }
     // clear intrrupt
     ethernet_write(DM9000_REG_ISR, ISR_PR);
