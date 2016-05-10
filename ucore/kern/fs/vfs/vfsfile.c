@@ -39,7 +39,12 @@ vfs_open(char *path, uint32_t open_flags, struct inode **node_store) {
 			if ((ret = vfs_lookup_parent(path, &dir, &name)) != 0) {
 				return ret;
 			}
-			ret = vop_create(dir, name, excl, &node);
+            if ((ret = vop_create(dir, name, excl, &node)) != 0) {
+                return ret;
+            }
+            if ((ret = vfs_lookup(path, &node)) != 0) {
+                return ret;
+            }
 		} else return ret;
     } else if (excl && create) {
 		return -E_EXISTS;

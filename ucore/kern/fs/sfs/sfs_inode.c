@@ -875,7 +875,8 @@ sfs_create(struct inode *node, const char *name, bool excl, struct inode **node_
 //    kprintf("finish to write din to disk\n");
 //    sfs_dirent_search_nolock(sfs, sin, name, NULL, NULL, NULL);
 //    sfs_lookup(node, name, NULL);
-    return sfs_load_inode(sfs, node_store, inodin);
+    return 0;
+//    return sfs_load_inode(sfs, node_store, inodin);
 }
 
 // The sfs specific DIR operations correspond to the abstract operations on a inode.

@@ -46,8 +46,8 @@ void tcp_handshake(int sockfd, int *src_addr, int *dst_addr) {
   if (tcp_queue[sockfd].tcp_state != TCP_CLOSED)
     return;
   tcp_queue[sockfd].tcp_seq = (rand() & 0xfff);
-  kprintf("TCP handshake initiated\n");
-  kprintf("handshake seq : %d\n", tcp_queue[sockfd].tcp_seq);
+//  kprintf("TCP handshake initiated\n");
+//  kprintf("handshake seq : %d\n", tcp_queue[sockfd].tcp_seq);
   tcp_queue[sockfd].tcp_src_port = 50000+(eth_rand() & 0xfff);
   eth_memcpy(tcp_queue[sockfd].tcp_src_addr, src_addr, 4);
   eth_memcpy(tcp_queue[sockfd].tcp_dst_addr, dst_addr, 4);

@@ -1,8 +1,3 @@
-/*
- * $File: test_eth.c
- * $Author: Hao Sun
- */
-
 #include <ulib.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,17 +6,20 @@
 #include <stat.h>
 #include <dirent.h>
 #include <unistd.h>
-#include <syscall.h>
 #include <utils.h>
 #include <new_tcp.h>
 
+#define PROG_FILE_NAME "test"
+
 int
 main(int argc, char **argv) {
-  char message[702];
+  char message[800];
   int message_len = 702;
   int ip[4] = {192, 168, 2, 1};
   int i,j;
+  int fd1 = -1;
   char temp;
+
   bind(0, ip, 8891);
   listen(0);
   cprintf("return from listen\n");
@@ -37,6 +35,13 @@ main(int argc, char **argv) {
     }
   for (i=0;i<6;i++)
     send(0, message+i*(message_len/6), message_len/6);
-//  tcp_close(0);
+
+  if (argc>1)
+    fd1 = open(argv[1], O_RDWR | O_CREAT);
+  else
+    fd1 = open(PROG_FILE_NAME, O_RDWR | O_CREAT);
+
+  write(fd1, message, message_len);
+  close(fd1);
   return 0;
 }
