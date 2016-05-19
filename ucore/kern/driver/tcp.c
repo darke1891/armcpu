@@ -32,6 +32,7 @@ void tcp_queue_init(int i) {
     tcp_queue[i].tcp_seq = INIT_SEQ;
     tcp_queue[i].tcp_state = TCP_CLOSED;
     tcp_queue[i].tcp_dst_port = 0;
+    tcp_queue[i].tcp_src_port = 0;
 }
 
 void tcp_init() {
@@ -69,7 +70,7 @@ void tcp_handle(int *dataHead, int length) {
   tcphdrlen = 4*(int)(data[TCP_DATA_OFFSET]>>4);
 
 
-  kprintf("recv_seq: %d, recv_ack: %d, flags: %d\n", mem2int(data + TCP_SEQ, 4), mem2int(data + TCP_ACK, 4), data[TCP_FLAGS]);
+//  kprintf("recv_seq: %d, recv_ack: %d, flags: %d\n", mem2int(data + TCP_SEQ, 4), mem2int(data + TCP_ACK, 4), data[TCP_FLAGS]);
   for (i=0;i<TCP_QUEUE_NUM;i++)
     if((data[TCP_FLAGS] & TCP_FLAG_SYN) &&
       (tcp_queue[i].tcp_state == TCP_LISTEN)) {
@@ -98,23 +99,23 @@ void tcp_handle(int *dataHead, int length) {
   }
 
   if (sockfd == -1) {
-    kprintf("No connection matches\n");
+//    kprintf("No connection matches\n");
     return;
   }
 
   // not closed, check port & addr
   if(tcp_queue[sockfd].tcp_dst_port != mem2int(data + TCP_SRC_PORT, 2)){
-    kprintf("wrong port: %d, %d\n", tcp_queue[sockfd].tcp_dst_port, mem2int(data + TCP_SRC_PORT, 2));
+//    kprintf("wrong port: %d, %d\n", tcp_queue[sockfd].tcp_dst_port, mem2int(data + TCP_SRC_PORT, 2));
     return;
   }
   if (tcp_queue[sockfd].tcp_state == TCP_CLOSED) {
-    kprintf("This connection has been closed\n");
+//    kprintf("This connection has been closed\n");
     return;
   }
 
   if(tcp_queue[sockfd].tcp_state == TCP_FIN_RECV) {
     tcp_queue[sockfd].tcp_state = TCP_CLOSED;
-    kprintf("TCP_CLOSED\n");
+//    kprintf("TCP_CLOSED\n");
     return;
   }
 
@@ -123,6 +124,7 @@ void tcp_handle(int *dataHead, int length) {
     tcp_queue[sockfd].tcp_seq = mem2int(data+TCP_ACK, 4);
     tcp_queue[sockfd].tcp_my_seq = tcp_queue[sockfd].tcp_seq;
     tcp_queue[sockfd].tcp_ack = mem2int(data+TCP_SEQ, 4) + 1;
+    tcp_queue[sockfd].tcp_remote_seq = tcp_queue[sockfd].tcp_ack;
     // send out ACK
     tcp_send_packet(sockfd, TCP_FLAG_ACK, 0, 0);
     tcp_queue[sockfd].tcp_state = TCP_ESTABLISHED;
@@ -133,14 +135,14 @@ void tcp_handle(int *dataHead, int length) {
   }
   if(data[TCP_FLAGS] & TCP_FLAG_RST) {
     tcp_queue[sockfd].tcp_state = TCP_CLOSED;
-    kprintf("TCP_CLOSED\n");
+//    kprintf("TCP_CLOSED\n");
     return;
   }
   if(tcp_queue[sockfd].tcp_state == TCP_FIN_SENT) {
     tcp_queue[sockfd].tcp_seq = mem2int(data + TCP_ACK, 4);
     tcp_send_packet(sockfd, TCP_FLAG_RST, 0, 0);
     tcp_queue[sockfd].tcp_state = TCP_CLOSED;
-    kprintf("TCP_CLOSED\n");
+//    kprintf("TCP_CLOSED\n");
     return;
   }
   if(tcp_queue[sockfd].tcp_state == TCP_SYNC_RECVED &&
@@ -167,7 +169,7 @@ void tcp_handle(int *dataHead, int length) {
   if ((data[TCP_FLAGS] & TCP_FLAG_FIN) && !(data[TCP_FLAGS] & TCP_FLAG_PSH)) {
     tcp_queue[sockfd].tcp_ack +=  1;
     tcp_send_packet(sockfd, TCP_FLAG_FIN | TCP_FLAG_ACK, 0, 0);
-    kprintf("TCP_CLOSED\n");
+//    kprintf("TCP_CLOSED\n");
     tcp_queue[sockfd].tcp_state = TCP_CLOSED;
     return;
   }
@@ -277,12 +279,16 @@ int tcp_bind(int sockfd, int *ip, int port) {
 }
 
 int tcp_connect(int sockfd, int *ip, int port) {
-  tcp_queue[sockfd].tcp_dst_port = port;
+  bool intr_flag;
   REMOTE_IP_ADDR[0] = ip[0];
   REMOTE_IP_ADDR[1] = ip[1];
   REMOTE_IP_ADDR[2] = ip[2];
   REMOTE_IP_ADDR[3] = ip[3];
+  local_intr_save(intr_flag);
+  tcp_queue_init(sockfd);
+  tcp_queue[sockfd].tcp_dst_port = port;
   tcp_handshake(sockfd, IP_ADDR, REMOTE_IP_ADDR);
+  local_intr_restore(intr_flag);
   wait_ethernet_int();
   return 0;
 }
