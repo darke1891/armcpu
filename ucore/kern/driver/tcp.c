@@ -191,6 +191,8 @@ void tcp_handle(int *dataHead, int length) {
       // in order pkt
 //      tcp_ack += datalen;
 //      kprintf("tcp: datalen: %d, tcphdrlen: %d\n", datalen, tcphdrlen);
+//        kprintf("Before : Now we have %d bytes\n", tcp_queue[sockfd].recv_len);
+//        kprintf("Before seq %d %d %d\n", tcp_queue[sockfd].tcp_remote_seq, mem2int(data + TCP_SEQ, 4), datalen);
         if ((datalen>0) && (tcp_queue[sockfd].tcp_remote_seq == mem2int(data + TCP_SEQ, 4)) && (datalen + tcp_queue[sockfd].recv_len <= buf_length)) {
           for (i=0;i<datalen;i++) {
             tcp_queue[sockfd].recv_buffer[tcp_queue[sockfd].recv_pos] = (char)(data[tcphdrlen + i]);
@@ -202,7 +204,7 @@ void tcp_handle(int *dataHead, int length) {
           tcp_queue[sockfd].tcp_ack = mem2int(data + TCP_SEQ, 4) + datalen;
           tcp_queue[sockfd].tcp_remote_seq = tcp_queue[sockfd].tcp_ack;
           tcp_queue[sockfd].tcp_seq = tcp_queue[sockfd].tcp_my_seq;
-//          kprintf("Now we have %d bytes\n", tcp_queue[sockfd].recv_len);
+          kprintf("Now we have %d bytes\n", tcp_queue[sockfd].recv_len);
           tcp_send_packet(sockfd, TCP_FLAG_ACK, 0, 0);
           if (tcp_queue[sockfd].recv_waiting && (tcp_queue[sockfd].recv_len >= tcp_queue[sockfd].recv_len_target)) {
             wakeup_ethernet();
@@ -344,7 +346,7 @@ void tcp_send_queue(int sockfd) {
 int tcp_recv(int sockfd, char* data, int len) {
   int i;
   bool intr_flag;
-//  kprintf("tcp_handle recving len: %d\n", len);
+//  kprintf("tcp_handle recving len: %d, now len: %d\n", len, tcp_queue[sockfd].recv_len);
   local_intr_save(intr_flag);
   if (len > buf_length)
     len = buf_length;
@@ -356,13 +358,13 @@ int tcp_recv(int sockfd, char* data, int len) {
     local_intr_save(intr_flag);
     tcp_queue[sockfd].recv_waiting = 0;
   }
-    for (i = 0; (i < len) && (tcp_queue[sockfd].recv_len > 0);i++) {
-      data[i] = tcp_queue[sockfd].recv_buffer[tcp_queue[sockfd].recv_start];
-      tcp_queue[sockfd].recv_start++;
-      tcp_queue[sockfd].recv_len--;
-      if (tcp_queue[sockfd].recv_start >= buf_length)
-        tcp_queue[sockfd].recv_start -= buf_length;
-    }
+  for (i = 0; (i < len) && (tcp_queue[sockfd].recv_len > 0);i++) {
+    data[i] = tcp_queue[sockfd].recv_buffer[tcp_queue[sockfd].recv_start];
+    tcp_queue[sockfd].recv_start++;
+    tcp_queue[sockfd].recv_len--;
+    if (tcp_queue[sockfd].recv_start >= buf_length)
+      tcp_queue[sockfd].recv_start -= buf_length;
+  }
   local_intr_restore(intr_flag);
   return 0;
 }
