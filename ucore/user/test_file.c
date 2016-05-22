@@ -40,7 +40,7 @@ main(int argc, char **argv) {
     }
     else {
       cprintf("Get %s, len : %d\n", argv[i], message_len);
-      fd1 = open(argv[1], O_RDWR | O_CREAT);
+      fd1 = open(argv[i], O_RDWR | O_CREAT);
       while (message_len > 0) {
         if (message_len > 500)
           l = 500;

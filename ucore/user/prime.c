@@ -2,10 +2,9 @@
 #include <ulib.h>
 
 #define N 1000
-int p[N];
 
-int
-main(void) {
+int main(void) {
+    int p[N];
     int i;
     for (i = 2; i < N; ++i)
         p[i] = 1;

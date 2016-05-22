@@ -13,7 +13,7 @@ print "connected"
 
 while True:
 	a = s.recv(256)
-	if a == "exit":
+	if a == "exit" or a == "":
 		break
 	if os.path.exists(a):
 		f = open(a,'rb')
@@ -27,7 +27,6 @@ while True:
 				nl = l - st
 			else:
 				nl = 500
-			print nl, len(a[st:st+nl])
 			s.send(a[st:st+nl])
 			re = s.recv(2)
 			st += nl

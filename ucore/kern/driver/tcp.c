@@ -208,7 +208,7 @@ void tcp_handle(int *dataHead, int length) {
           tcp_queue[sockfd].tcp_ack = recv_seq + datalen;
           tcp_queue[sockfd].tcp_remote_seq = tcp_queue[sockfd].tcp_ack;
           tcp_queue[sockfd].tcp_seq = tcp_queue[sockfd].tcp_my_seq;
-          kprintf("Now we have %d bytes\n", tcp_queue[sockfd].recv_len);
+//          kprintf("Now we have %d bytes\n", tcp_queue[sockfd].recv_len);
           tcp_send_packet(sockfd, TCP_FLAG_ACK, 0, 0);
           if (tcp_queue[sockfd].recv_waiting && (tcp_queue[sockfd].recv_len >= tcp_queue[sockfd].recv_len_target)) {
             wakeup_ethernet();
