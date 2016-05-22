@@ -66,7 +66,7 @@ INCLUDES  := $(addprefix -I,$(SRC_DIR))
 INCLUDES  += -I$(SRCDIR)/include
 
 ifeq  ($(ON_FPGA), y)
-USER_APPLIST:= sh ls cat run test_eth yield testfile prime
+USER_APPLIST:= sh ls cat run yield test_two test_file
 #INITRD_BLOCK_CNT:=1500
 INITRD_BLOCK_CNT:=3000
 FPGA_LD_FLAGS += -S
@@ -184,7 +184,7 @@ $(OBJDIR)/ucore-kernel-initrd: gen_tag $(BUILD_DIR) $(TOOL_MKSFS) $(OBJ) $(USER_
 	mkdir $(ROOTFS_DIR)
 	cp $(USER_APP_BINS) $(ROOTFS_DIR)
 #	cp -Lr $(USER_SRCDIR)/_archive/* $(ROOTFS_DIR)/
-	mv $(ROOTFS_DIR)/prime test/
+#	mv $(ROOTFS_DIR)/prime test/
 	dd if=/dev/zero of=$(ROOTFS_IMG) count=$(INITRD_BLOCK_CNT)
 	#touch $(ROOTFS_IMG)
 	$(TOOL_MKSFS) $(ROOTFS_IMG) $(ROOTFS_DIR)

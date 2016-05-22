@@ -128,7 +128,7 @@ void tcp_handle(int *dataHead, int length) {
     // send out ACK
     tcp_send_packet(sockfd, TCP_FLAG_ACK, 0, 0);
     tcp_queue[sockfd].tcp_state = TCP_ESTABLISHED;
-    kprintf("TCP handshake complete\n");
+//    kprintf("TCP handshake complete\n");
 
     wakeup_ethernet();
     return;
@@ -152,7 +152,7 @@ void tcp_handle(int *dataHead, int length) {
     tcp_queue[sockfd].tcp_ack = mem2int(data + TCP_SEQ, 4);
     tcp_queue[sockfd].tcp_remote_seq = tcp_queue[sockfd].tcp_ack;
     tcp_queue[sockfd].tcp_state = TCP_ESTABLISHED;
-    kprintf("TCP_ESTABLISHED\n");
+//    kprintf("TCP_ESTABLISHED\n");
     wakeup_ethernet();
     return;
   }
@@ -202,7 +202,7 @@ void tcp_handle(int *dataHead, int length) {
           tcp_queue[sockfd].tcp_ack = mem2int(data + TCP_SEQ, 4) + datalen;
           tcp_queue[sockfd].tcp_remote_seq = tcp_queue[sockfd].tcp_ack;
           tcp_queue[sockfd].tcp_seq = tcp_queue[sockfd].tcp_my_seq;
-          kprintf("Now we have %d bytes\n", tcp_queue[sockfd].recv_len);
+//          kprintf("Now we have %d bytes\n", tcp_queue[sockfd].recv_len);
           tcp_send_packet(sockfd, TCP_FLAG_ACK, 0, 0);
           if (tcp_queue[sockfd].recv_waiting && (tcp_queue[sockfd].recv_len >= tcp_queue[sockfd].recv_len_target)) {
             wakeup_ethernet();
@@ -304,7 +304,7 @@ int tcp_send(int sockfd, char* data, int len) {
   bool intr_flag;
   if (tcp_queue[sockfd].send_len + len > buf_length)
     return -1;
-  kprintf("tcp send len: %d\n", len);
+//  kprintf("tcp send len: %d\n", len);
   local_intr_save(intr_flag);
   for (i=0;i<len;i++) {
     tcp_queue[sockfd].send_buffer[tcp_queue[sockfd].send_pos] = (int)(data[i]);
@@ -326,7 +326,7 @@ void tcp_send_queue(int sockfd) {
   int send_now;
   if (tcp_queue[sockfd].send_len == 0)
     return;
-  kprintf("tcp sending len: %d\n", tcp_queue[sockfd].send_len);
+//  kprintf("tcp sending len: %d\n", tcp_queue[sockfd].send_len);
   local_intr_save(intr_flag);
   send_now = tcp_queue[sockfd].send_start;
   for (i=0;i<tcp_queue[sockfd].send_len;i++) {
@@ -344,7 +344,7 @@ void tcp_send_queue(int sockfd) {
 int tcp_recv(int sockfd, char* data, int len) {
   int i;
   bool intr_flag;
-  kprintf("tcp_handle recving len: %d\n", len);
+//  kprintf("tcp_handle recving len: %d\n", len);
   local_intr_save(intr_flag);
   if (len > buf_length)
     len = buf_length;
@@ -363,7 +363,6 @@ int tcp_recv(int sockfd, char* data, int len) {
       if (tcp_queue[sockfd].recv_start >= buf_length)
         tcp_queue[sockfd].recv_start -= buf_length;
     }
-    data[len] = '\0';
   local_intr_restore(intr_flag);
   return 0;
 }
