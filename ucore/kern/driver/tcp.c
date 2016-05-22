@@ -64,6 +64,8 @@ void tcp_handle(int *dataHead, int length) {
   int sockfd;
   int tcp_listen_port;
   int i;
+  int recv_seq;
+  int after_len;
 
   if (length < TCP_HDR_LEN)
     return;
@@ -192,8 +194,10 @@ void tcp_handle(int *dataHead, int length) {
 //      tcp_ack += datalen;
 //      kprintf("tcp: datalen: %d, tcphdrlen: %d\n", datalen, tcphdrlen);
 //        kprintf("Before : Now we have %d bytes\n", tcp_queue[sockfd].recv_len);
-//        kprintf("Before seq %d %d %d\n", tcp_queue[sockfd].tcp_remote_seq, mem2int(data + TCP_SEQ, 4), datalen);
-        if ((datalen>0) && (tcp_queue[sockfd].tcp_remote_seq == mem2int(data + TCP_SEQ, 4)) && (datalen + tcp_queue[sockfd].recv_len <= buf_length)) {
+        recv_seq = mem2int(data + TCP_SEQ, 4);
+        after_len = tcp_queue[sockfd].recv_len + datalen;
+//        kprintf("Before seq %d %d %d\n", tcp_queue[sockfd].tcp_remote_seq, recv_seq, after_len);
+        if ((datalen>0) && (tcp_queue[sockfd].tcp_remote_seq == recv_seq) && (datalen + tcp_queue[sockfd].recv_len <= buf_length)) {
           for (i=0;i<datalen;i++) {
             tcp_queue[sockfd].recv_buffer[tcp_queue[sockfd].recv_pos] = (char)(data[tcphdrlen + i]);
             tcp_queue[sockfd].recv_pos++;
@@ -201,7 +205,7 @@ void tcp_handle(int *dataHead, int length) {
             if (tcp_queue[sockfd].recv_pos >= buf_length)
               tcp_queue[sockfd].recv_pos -= buf_length;
           }
-          tcp_queue[sockfd].tcp_ack = mem2int(data + TCP_SEQ, 4) + datalen;
+          tcp_queue[sockfd].tcp_ack = recv_seq + datalen;
           tcp_queue[sockfd].tcp_remote_seq = tcp_queue[sockfd].tcp_ack;
           tcp_queue[sockfd].tcp_seq = tcp_queue[sockfd].tcp_my_seq;
           kprintf("Now we have %d bytes\n", tcp_queue[sockfd].recv_len);
@@ -211,7 +215,7 @@ void tcp_handle(int *dataHead, int length) {
           }
         }
 
-        if ((datalen == 0) && (data[TCP_FLAGS] & TCP_FLAG_ACK) && (mem2int(data + TCP_ACK, 4) == tcp_queue[sockfd].tcp_my_seq + tcp_queue[sockfd].send_waiting)) {
+        if ((data[TCP_FLAGS] & TCP_FLAG_ACK) && (mem2int(data + TCP_ACK, 4) == tcp_queue[sockfd].tcp_my_seq + tcp_queue[sockfd].send_waiting) && (tcp_queue[sockfd].send_waiting > 0)) {
           tcp_queue[sockfd].tcp_my_seq += tcp_queue[sockfd].send_waiting;
           tcp_queue[sockfd].send_start += tcp_queue[sockfd].send_waiting;
           if (tcp_queue[sockfd].send_start >= buf_length)

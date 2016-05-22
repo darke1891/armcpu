@@ -31,28 +31,31 @@ main(int argc, char **argv) {
   listen(0);
   cprintf("return from connect 0\n");
   cprintf("return from open file\n");
-  file_name_len = strlen(argv[1]);
-  send(0, argv[1], file_name_len);
-  recv(0, (char*)(&message_len), 4);
-  if (message_len == 0) {
-    cprintf("Can't find this file\n");
-  }
-  else {
-    cprintf("Get %s, len : %d\n", argv[1], message_len);
-    fd1 = open(argv[1], O_RDWR | O_CREAT);
-    while (message_len > 0) {
-      if (message_len > 500)
-        l = 500;
-      else
-        l = message_len;
-      recv(0, message, l);
-      write(fd1, message, l);
-      send(0, "OK", 2);
-      message_len = message_len - l;
-//      cprintf("%d %d\n", message_len, l);
+  for (i=1;i<argc;i++) {
+    file_name_len = strlen(argv[i]);
+    send(0, argv[i], file_name_len);
+    recv(0, (char*)(&message_len), 4);
+    if (message_len == 0) {
+      cprintf("Can't find this file\n");
     }
-    close(fd1);
+    else {
+      cprintf("Get %s, len : %d\n", argv[i], message_len);
+      fd1 = open(argv[1], O_RDWR | O_CREAT);
+      while (message_len > 0) {
+        if (message_len > 500)
+          l = 500;
+        else
+          l = message_len;
+        recv(0, message, l);
+        write(fd1, message, l);
+        send(0, "OK", 2);
+        message_len = message_len - l;
+  //      cprintf("%d %d\n", message_len, l);
+      }
+      close(fd1);
+    }
   }
+  send(0, "exit", 4);
 
 
   return 0;
