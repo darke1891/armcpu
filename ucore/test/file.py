@@ -2,10 +2,13 @@
 import socket
 import struct
 import os
+import datetime
 
 #HOST = '127.0.0.1'
 HOST = '192.168.2.2'
 PORT=8900
+
+start = datetime.datetime.now()
 
 s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 s.connect((HOST,PORT))
@@ -34,3 +37,6 @@ while True:
 	else:
 		s.send(struct.pack('i', 0))
 s.close()
+
+end = datetime.datetime.now()
+print (end - start).total_seconds()
