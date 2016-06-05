@@ -838,7 +838,11 @@ sfs_create(struct inode *node, const char *name, bool excl, struct inode **node_
     int ret = 0;
     // get inode no.
     sfs_block_alloc(sfs, &inodin);
-    sfs_bmap_load_nolock(sfs, sin, sin->din->blocks, &ino);
+    lock_sin(sin);
+    {
+        sfs_bmap_load_nolock(sfs, sin, sin->din->blocks, &ino);
+    }
+    unlock_sin(sin);
 //    kprintf("sfs_create: %s\n", name);
 //    kprintf("ino: %d, inodin: %d\n:", ino, inodin);
     struct sfs_disk_entry *entry;
