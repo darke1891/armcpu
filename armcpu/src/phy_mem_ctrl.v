@@ -33,11 +33,9 @@
 `define RAM_WRITE_WIDTH	1	// width of write signal
 `define RAM_WRITE_READ_RECOVERY 1	// recovery time before next read after write
 
-`define ETH_WRITE_WIDTH	2
-`define ETH_WRITE_BEGIN	0
-`define ETH_READ_WIDTH 2
-`define ETH_READ_BEGIN 0
-`define ETH_WRITE_READ_RECOVERY 4
+`define ETH_WRITE_WIDTH	4
+`define ETH_WRITE_BEGIN	1
+`define ETH_WRITE_READ_RECOVERY 2
 
 `define FLASH_WRITE_WIDTH 4
 `define FLASH_WRITE_READ_RECOVERY 2
@@ -210,27 +208,42 @@ module phy_mem_ctrl(
 		endcase
 	end
 	
+    // try hierarchy ... work!
+    // remove reg ... try soft
+    
+	// write eth reg and data
+    // reg [15:0] eth_data_reg;
+    /*
+    // latch version
+    assign eth_data = eth_data_reg;
+    always @(*) begin
+        if (state == WRITE_ETH)
+            eth_data_reg = {16{1'b0}};//write_data_latch[15:0];
+        else
+            eth_data_reg = {16{1'bz}};
+    end
+    */
+	//assign eth_data = (state == WRITE_ETH) ? eth_data_reg : {16{1'bz}};
 	assign eth_data = (state == WRITE_ETH) ? write_data_latch : {16{1'bz}};
+    //assign eth_data = {16{1'bz}};
 	assign eth_cs = 1'b0;
+	// select index or data
+	/*
+	always @(negedge clk50M) begin
+		case ({addr_is_eth_reg, addr_is_eth_data})
+			2'b10: eth_cmd <= 1'b0;
+			2'b01: eth_cmd <= 1'b1;
+		endcase
+	end
+	*/
 	//assign eth_cmd = write_addr_latch == `ETH_DATA_ADDR;
+    //?assign eth_cmd = 1;
+    //assign eth_ior = 1;
+    //assign eth_iow = 1;
 	assign eth_cmd = (state != WRITE_ETH && opt_is_lw)? addr_is_eth_data : (write_addr_latch == `ETH_DATA_ADDR);
 	assign eth_ior = ~(state == READ && addr_is_eth && opt_is_lw);
-//	assign eth_iow = ~(state == WRITE_ETH && 
-//            (write_cnt < `ETH_WRITE_WIDTH && write_cnt >= `ETH_WRITE_BEGIN));
-	reg eth_iow_inside;
-	assign eth_iow = eth_iow_inside;
-	always @(negedge clk50M) begin
-		if (rst) begin
-			eth_iow_inside <= 1;
-//			eth_ior_inside <= 1;
-			end
-		else begin
-			eth_iow_inside <= ~(state == WRITE_ETH && 
-							(write_cnt < `ETH_WRITE_WIDTH && write_cnt >= `ETH_WRITE_BEGIN));
-//			eth_ior_inside <= ~(state == READ_ETH && 
-//							(write_cnt < `ETH_READ_WIDTH && write_cnt >= `ETH_READ_BEGIN));
-			end
-	end
+	assign eth_iow = ~(state == WRITE_ETH && 
+            (write_cnt < `ETH_WRITE_WIDTH && write_cnt >= `ETH_WRITE_BEGIN));
 
 	// assign int ack
 	always @(negedge clk50M) begin
