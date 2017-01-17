@@ -1,4 +1,4 @@
-Another Reduced Mips CPU
+Another Reduced Mips CPU on FPGA
 ===========================
 
 
